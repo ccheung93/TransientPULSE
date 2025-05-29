@@ -184,8 +184,8 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw):
     dx_burst = t_star
     
     # Spread of the phi wave during propagation
-    q = np.sqrt((w/m_phi)**2-1)
-    dx_spread = (dw/w)*(R/q**2)
+    q = np.sqrt(np.maximum((w/m_phi)**2 - 1, 0))
+    dx_spread = (dw/w)*(R/np.maximum(q**2, 1e-99))
     
     # Total spread of the wavepacket
     dx = dx_burst + dx_spread
