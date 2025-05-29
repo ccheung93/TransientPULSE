@@ -81,7 +81,7 @@ def plot_supernova(ax, Elist, coupling_type):
             "txt_y": 3e29,
             "lbl_y": 3e31,
             "txt": r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
-            "line": [d_from_Lambda(1e12, 2)] * len(Elist)
+            "line": [coupling_from_Lambda(1e12, 2)] * len(Elist)
         },
         "electron": {
             "ylim": (.5e9, 5e33),
@@ -95,7 +95,7 @@ def plot_supernova(ax, Elist, coupling_type):
             "txt_y": 3e26,
             "lbl_y": 3e29,
             "txt": r'${\rm Supernova}~N N \rightarrow N N \phi \phi$',
-            "line": [d_from_Lambda(15e12, 2)] * len(Elist)
+            "line": [coupling_from_Lambda(15e12, 2)] * len(Elist)
         }
     }
     
@@ -252,25 +252,25 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
             wm_day = omegaoverm_noscreen(DAY_TO_SEC, R)
             
             if coupling_order == 'linear':
-                coupling = d_probe(Elist, rho, rescaling_factor, eta, 1)
+                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, 1)
                 
-                dday30 = d2_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
-                ddt30 = d2_from_delta_t(dt, R, m, Elist, 30e3, K_space)
+                dday30 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
+                ddt30 = coupling_from_delta_t(dt, R, m, Elist, 30e3, K_space)
                 
                 linear_plot(axij, i, j, coupling, m, Elist, t, dday30, ddt30, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
                 
             elif coupling_order == 'quad':
-                coupling = d_probe(Elist, rho, rescaling_factor, eta, 2)
+                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, 2)
 
-                d_screen_earth = d2_screen(Elist, R_E, RHO_E, m, K_E)
-                d_screen_atm = d2_screen(Elist, R_ATM, RHO_ATM, m, K_atm)
-                d_screen_exp = d2_screen(Elist, R_EXP, RHO_EXP, m, K_E)
+                d_screen_earth = coupling_critical(Elist, R_E, RHO_E, m, K_E)
+                d_screen_atm = coupling_critical(Elist, R_ATM, RHO_ATM, m, K_atm)
+                d_screen_exp = coupling_critical(Elist, R_EXP, RHO_EXP, m, K_E)
                 
-                dday1 = d2_from_delta_t(DAY_TO_SEC, R, m, Elist, 1e3, K_space)
-                ddt1 = d2_from_delta_t(dt, R, m, Elist, 1e3, K_space)
+                dday1 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 1e3, K_space)
+                ddt1 = coupling_from_delta_t(dt, R, m, Elist, 1e3, K_space)
                 
-                dday30 = d2_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
-                ddt30 = d2_from_delta_t(dt, R, m, Elist, 30e3, K_space)
+                dday30 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
+                ddt30 = coupling_from_delta_t(dt, R, m, Elist, 30e3, K_space)
                 
                 quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, ddt1, dday30, ddt30, wm_dt, wm_day, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, filename)
 

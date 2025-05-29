@@ -20,15 +20,46 @@ YEAR_TO_SEC = 365*DAY_TO_SEC               # number of seconds in 1 year
 
 GCM3_TO_EV4 = 4.2e18                       # g/cm^3 to eV^4
 PLANCK_MASS_EV = 1.2e28                    # Planck mass in eV
-GPC_TO_PC = 1e9                            # gigaparsec to parsecs
+GIGA_TO_BASE = 1e9                         # giga to base in SI
 METERS_TO_INEV = 5.07e6                    # meters to 1/eV
 AVG_VEL_DM = 1e-3                          # average velocity of galactic Dark Matter
+
+MASS_ELECTRON = 0.511e6                    # mass of electron in eV
+
+# Define normalization multipliers for electron and photon couplings
+DEFAULT_NORMALIZATION_MULTIPLIER = {
+    'electron': 1/(2*MASS_ELECTRON/GIGA_TO_BASE),
+    'photon': 1/4,
+    'proton': 1,
+    'neutron': 1,
+    'EDM': 1
+}
+
+G_DM_BENCHMARKS = {
+    'electron': 2e-14,   # 1/GeV
+    'photon': 3e-16,     # 1/GeV
+    'proton': 1e-12,     # 1/GeV
+    'neutron': 1e-11,    # 1/GeV
+    'EDM': 1e-18         # 1/GeV^2
+}
+
+ASTROPHYSICAL_CONSTRAINT_BENCHMARKS = {
+    'electron': 1e-13,
+    'photon': 5e-13,
+    'proton': 6e-10,
+    'neutron': 1.3e-9,
+    'EDM': 6.7e-9
+}
 
 # Densities of ISM and IGM converted from g/cm^3 to eV^4
 RHO_ISM_GCM3 = 1.67e-24
 RHO_ISM = RHO_ISM_GCM3 * GCM3_TO_EV4
 RHO_IGM_GCM3 = 1.67e-30
 RHO_IGM = RHO_IGM_GCM3 * GCM3_TO_EV4
+
+# Ambient dark matter density
+RHO_DM_GEV_CM3 = 0.4 # GeV/cm^3
+RHO_DM_EV4 = RHO_DM_GEV_CM3 * GIGA_TO_BASE * (INEV_TO_METERS * 100)**3
 
 # Density and radius of the Earth, atmosphere and experiment
 RHO_E = 5.5 * GCM3_TO_EV4
@@ -57,7 +88,7 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw, integra
 
     Returns:
         rho (float): energy density of phi at Earth [eV^4]
-        rescaling_factor (array_like): rescaling factors for each energy [unitless]
+        timing_rescaling_factor (array_like): rescaling factors for each energy [unitless]
     """ 
     # Convert to proper units
     t_star = burst_duration*SEC_TO_INEV
@@ -67,14 +98,14 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw, integra
     rho = calc_rho(Etot, m_phi, energies, t_star, R, aw)
     
     # Compute rescaling factor (fraction in Eq. 46 in arXiv:2502.08716v1)
-    rescaling_factor = calc_rescaling_factor(m_phi, energies, t_star, R, aw, integration_time)
+    timing_rescaling_factor = calc_timing_rescaling_factor(m_phi, energies, t_star, R, aw, integration_time)
     
-    return rho, rescaling_factor
+    return rho, timing_rescaling_factor
 
-def calc_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
-    """ Calculate rescaling factor (Eq. 46 in arXiv:2502.08716v1)
+def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
+    """ Calculate timing rescaling factor (fraction from Eq. 46 in arXiv:2502.08716v1)
                     t_int_DM^(1/4) * min(tau_DM^(1/4), t_int_DM^(1/4))
-    rf = -----------------------------------------------------------------------------
+    trf = ----------------------------------------------------------------------------
             min(sig_dur^(1/4), t_int^(1/4)) * min(tau_star^(1/4), t_int_star^(1/4))
     Args:
         m_phi (float): mass of phi field [eV]
@@ -121,21 +152,21 @@ def calc_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
     mass_DM = w
     tau_DM = 2*PI/(mass_DM*AVG_VEL_DM**2)
     
-    rescaling_factor = [
+    timing_rescaling_factor = [
         (t_dm**(1/4)) * min(tau_dm**(1/4), t_dm**(1/4)) /
         (min(sig_dur**(1/4), t_i**(1/4)) * min(tau_s**(1/4), t_i**(1/4)))
         for t_dm, tau_dm, sig_dur, t_i, tau_s in zip(t_int_DM, tau_DM, signal_duration, t_int, tau_star)
     ]
     
-    return rescaling_factor
+    return timing_rescaling_factor
 
-def calc_rho(Etot, m_phi, w, t_star, R, aw, axion=False):
+def calc_rho(Etot, m_phi, w, t_star, R, aw):
     """ Calculate the energy density of phi at Earth in eV^4
     
     Args:
         Etot (float): total energy of emitted phi particles from the source [eV]
         m_phi (float): mass of phi field [eV]
-        energies (array_like): array of individual particle energies [eV]
+        w (array_like): array of individual particle energies [eV]
         t_star (float): the duration of the burst emission at the source [1/eV]
         R (float): distance between source and detector [1/eV]
         aw (float): wavepacket uncertainty parameter based on uncertainty principle:
@@ -153,7 +184,7 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw, axion=False):
     dx_burst = t_star
     
     # Spread of the phi wave during propagation
-    q = np.sqrt((w/m_phi)**2-1) if axion else w/m_phi # TODO - figure out where expression for q for axions comes from
+    q = np.sqrt((w/m_phi)**2-1)
     dx_spread = (dw/w)*(R/q**2)
     
     # Total spread of the wavepacket
@@ -164,51 +195,59 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw, axion=False):
     
     return rho
 
-def d_probe(w, rho, rescaling_factor, eta, order, axion=False):
+def coupling_probe(w, m, rho, timing_rescaling_factor, eta, coupling_order, coupling_type=None, axion=False):
     """ Calculate value of dilatonic coupling we can probe
 
     Args:
         w (float): energy of phi emitted by the source
         rho (float): density of phi at the Earth
-        rescaling_factor (array of floats): rescaling factors
+        timing_rescaling_factor (array of floats): rescaling factors
         eta (float): fractional sensitivity of coupling_type to dark matter signal
-        order (int): coupling order
+        coupling_order (int): coupling order
+        coupling_type (str): coupling type
+        axion (boolean): calculating coupling for axions or not
 
     Returns:
         float: value of dilatonic coupling we can probe
     """
     if axion:
-        rhoDM = 3.05e-6 #eV^4 what is this
-        d_DM = 2e-13 * (1e3/1.022) # TODO - what is this?
-        d = d_DM * AVG_VEL_DM * np.sqrt(rhoDM/rho) * rescaling_factor # TODO - check how this is derived, dimensions not equal (perhaps replace AVG_VEL_DM with velocity_ratio = v_DM/v_star = AVG_VEL_DM)
-        return d
+        g_DM = G_DM_BENCHMARKS[coupling_type] * DEFAULT_NORMALIZATION_MULTIPLIER[coupling_type]
+        v_star = np.sqrt(1-m**2/w**2)
+        velocity_ratio = AVG_VEL_DM/v_star if coupling_type in ['electron', 'proton', 'neutron'] else 1
+        coupling = g_DM * np.sqrt(RHO_DM_EV4/rho) * velocity_ratio * timing_rescaling_factor
+        return coupling
     
-    if order == 1:
-        phi = np.sqrt(rho)/(2*w)
-        d = eta*PLANCK_MASS_EV/(2*np.sqrt(PI)*phi) * rescaling_factor # TODO - check how this is derived (Eq. 47?)
-    elif order == 2:
-        phi = np.sqrt(2*rho)/w
-        d = eta*PLANCK_MASS_EV**2/(4*PI*phi**2) * rescaling_factor # TODO - check how this is derived (Eq. 48?)
+    phi = np.sqrt(2*rho)/w
+    if coupling_order == 1:
+        coupling = eta*PLANCK_MASS_EV/(2*np.sqrt(PI)*phi) * timing_rescaling_factor
+    elif coupling_order == 2:
+        coupling = eta*PLANCK_MASS_EV**2/(4*PI*phi**2) * timing_rescaling_factor # TODO - check how this is derived (Eq. 48?)
     else:
-        raise ValueError(f"Unsupported coupling order: {order}")
-    return d
+        raise ValueError(f"Unsupported coupling order: {coupling_order}")
+    return coupling
 
-def d_from_Lambda(Lambda, order, axion=False): # TODO - update docstring and digure out constants
-    """ Calculate value of dilatonic coupling from Lambda for a given coupling order
+def coupling_from_Lambda(Lambda, coupling_order, coupling_type=None, constraint=None, multiplier=None, axion=False):
+    """ Calculate coupling from Lambda for a given coupling order and type
     
     Args:
         Lambda (float): energy scale for new physics
-        order (int): coupling order
+        coupling_order (int): coupling order
+        coupling_type (str): coupling type
+        constraint (float): astrophysical constraint
+        multipler (float): coupling normalization multiplier
+        axion (boolean): calculating coupling for axions or not
     
     Returns:
         float: dilatonic coupling calculated from a given Lambda value
     """
     if axion:
-        return 1e-13 * (1e3/1.022) # TODO - what is this? NOTE - 1e-13 here, 2e-13 above in d_probe()
+        constraint = constraint if constraint else ASTROPHYSICAL_CONSTRAINT_BENCHMARKS[coupling_type]
+        multiplier = multiplier if multiplier else DEFAULT_NORMALIZATION_MULTIPLIER[coupling_type]
+        return constraint * multiplier
     else:
-        return ((1/np.sqrt(4*PI))*(PLANCK_MASS_EV/Lambda))**order
+        return ((1/np.sqrt(4*PI))*(PLANCK_MASS_EV/Lambda))**coupling_order
 
-def d2_from_delta_t(dt, R, m, E, Dg, K, axion=False):
+def coupling_from_delta_t(dt, R, m, E, Dg, K, axion=False):
     """ Calculate value of quadratic dilatonic coupling from a time delay 
         (calculates d_i^(2) from Eq.39 in arXiv:2502.08716v1)
     
@@ -219,19 +258,19 @@ def d2_from_delta_t(dt, R, m, E, Dg, K, axion=False):
         E (array of floats): energies [eV]
         Dg (float): distance per galaxy of signal propagation [pc]
         K (float): energy density fraction [unitless]
+        axion (boolean): calculating coupling for axions or not
         
     Returns:
         float: value of quadratic dilatonic coupling from a time delay
     """
-    if axion: # TODO - explain this
-        gamma = (dt * SPEED_OF_LIGHT) / (R * PC_TO_METERS) + 1
-        moverE = np.sqrt(1 - 1 / gamma**2)
+    if axion:
+        moverE = np.sqrt(1 - 1 / (1 + (dt * SPEED_OF_LIGHT) / (R * PC_TO_METERS))**2)
         Em = m / moverE
         return [0 if Ei < Em else 1e100 for Ei in E]
     
     # Galaxy number density [galaxies / Gpc^3]
     number_density = 0.006e9
-    Ng = number_density * (R/GPC_TO_PC)**3
+    Ng = number_density * (R/GIGA_TO_BASE)**3
     
     prefactor = PLANCK_MASS_EV**2/(8*PI)
     R_meters = R * PC_TO_METERS
@@ -243,7 +282,7 @@ def d2_from_delta_t(dt, R, m, E, Dg, K, axion=False):
     #       8*pi*rho_ISM               (1+dt/R)^2
     #
     if R < 1e5:
-        d2 = prefactor * (E**2*(1 - 1/(1 + dt_c/R_meters)**2) - m**2)/(RHO_ISM*K)
+        coupling = prefactor * (E**2*(1 - 1/(1 + dt_c/R_meters)**2) - m**2)/(RHO_ISM*K)
     # ISM+IGM regime:
     #          M_pl^2                     2E^2*dt/R - m^2
     # d2 = -------------- [ -------------------------------------------- ]
@@ -253,10 +292,10 @@ def d2_from_delta_t(dt, R, m, E, Dg, K, axion=False):
         Ng_eff = Ng**(1/3) + 1
         numer = 2*E**2*dt_c/R_meters - m**2
         denom = Ng_eff*Dg/R*RHO_ISM*K + (1-(Ng_eff*Dg/R))*RHO_IGM*K
-        d2 = prefactor * numer / denom
-    return d2
+        coupling = prefactor * numer / denom
+    return coupling
 
-def omegaoverm_noscreen(dt, R):#
+def omegaoverm_noscreen(dt, R):
     """ Returns omega/m without screening (beta(x) = 0)
         omega           R+dt
         ----- = ---------------------
@@ -273,7 +312,7 @@ def omegaoverm_noscreen(dt, R):#
     dt = dt * SPEED_OF_LIGHT
     return (R + dt)/(np.sqrt(dt * (2*R+dt)))
 
-def d2_screen(E, R, rho, m, K):
+def coupling_critical(E, R, rho, m, K):
     """ Calculate the critical values of the quadratic dilatonic coupling 
     
     Args:
@@ -286,8 +325,8 @@ def d2_screen(E, R, rho, m, K):
     Returns:
         float: critical value of quadratic dilatonic coupling
     """
-    d = PLANCK_MASS_EV**2 / (8*PI*rho*K) * (1/(2*R)**2 + E**2 - m**2)
-    return d
+    coupling = PLANCK_MASS_EV**2 / (8*PI*rho*K) * (1/(2*R)**2 + E**2 - m**2)
+    return coupling
 
 def E_from_uncert(burst_duration):
     """ Calculate the energy from the burst duration using the Heisenberg uncertainty relation 
