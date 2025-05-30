@@ -2,7 +2,7 @@ import numpy as np
 
 # CONVERSION FACTORS
 SPEED_OF_LIGHT = 3e8                       # speed of light in m/s
-HBAR = 6.582e-16                           # reduced Planck constant in eV*s # NOTE - HBAR wrong previously
+HBAR = 6.582e-16                           # reduced Planck constant in eV*s
 
 INEV_TO_METERS = 1.97e-7                   # eV^-1 to meters
 PC_TO_METERS = 3.086e16                    # parsecs to meters
@@ -139,26 +139,19 @@ def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, t_int=DAY_TO_SEC, t_in
     dx_spread = (dw/w)*(R/q**2)
     
     # Calculate t_star_tilde, the signal duration at Earth (Eq. 43)
-    if axion:
-        dk = m_phi/(2*PI)
-        dt_burst = t_star * np.ones_like(w)
-        ineV_to_AU = 0.197e-18 * 1e9*206265/3.086e13 
-        print(PC_TO_INEV, 1/ineV_to_AU) # TODO - check conversion of R in axion code (AU or pc to ineV?) pc_to_ineV causes a 'wiggle' in the coupling
-        dt_wave_spreading = (dk / m_phi) * (R/PC_TO_INEV/ineV_to_AU) / (q**2 * np.sqrt(q**2 + 1)) # NOTE - discuss unit of R here
-        dt = np.maximum(dt_burst, dt_wave_spreading)
-    signal_duration = dt if axion else np.sqrt(t_star**2 + dx_spread**2) # TODO - discuss dt/sig_dur for axions
+    signal_duration = np.sqrt(t_star**2 + dx_spread**2)
 
     # Calculate effective coherence time observed by the detector (Eq. 40)
     #              2*pi          2*pi*R
     # tau_star = -------- + ----------------
     #               dw        q^3*m*t_star
-    tau_star = 2*PI/dw*np.ones_like(w) if axion else 2*PI/dw + 2*PI*R/(q**3 * m_phi * t_star) # TODO - discuss tau_s for axions
+    tau_star = 2*PI/dw + 2*PI*R/(q**3 * m_phi * t_star)
     
     # Calculate coherence times for non-relativistic, ambient DM (Eq. 46)
     #            2*pi
     # tau_DM = ----------, m_DM = w
     #           m_DM*v^2
-    mass_DM = m_phi * np.ones_like(w) if axion else w # TODO - discuss mass_DM for axions 
+    mass_DM = w
     tau_DM = 2*PI/(mass_DM*AVG_VEL_DM**2)
     
     timing_rescaling_factor = [
@@ -194,7 +187,7 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw, axion=False):
     
     # Spread of the phi wave during propagation
     q = np.sqrt((w/m_phi)**2-1) if axion else np.sqrt(np.maximum((w/m_phi)**2 - 1, 0))
-    dx_spread = (dw/w)*(R/q) if axion else (dw/w)*(R/np.maximum(q**2, 1e-99)) # TODO - discuss 1/q for axion, 1/q^2 for scalars
+    dx_spread = (dw/w)*(R/np.maximum(q**2, 1e-99))
     
     # Total spread of the wavepacket
     dx = dx_burst + dx_spread
@@ -224,15 +217,10 @@ def coupling_probe(w, m, rho, timing_rescaling_factor, eta, coupling_order=None,
         v_star = np.sqrt(1-m**2/w**2)
         velocity_ratio = AVG_VEL_DM/v_star if coupling_type in ['electron', 'proton', 'neutron'] else 1
         coupling = g_DM * np.sqrt(RHO_DM_EV4/rho) * velocity_ratio * timing_rescaling_factor
-        return coupling
-    
-    phi = np.sqrt(2*rho)/w
-    if coupling_order == 1:
-        coupling = eta*PLANCK_MASS_EV/(2*np.sqrt(PI)*phi) * timing_rescaling_factor
-    elif coupling_order == 2:
-        coupling = eta*PLANCK_MASS_EV**2/(4*PI*phi**2) * timing_rescaling_factor # TODO - check how this is derived (Eq. 48?)
     else:
-        raise ValueError(f"Unsupported coupling order: {coupling_order}")
+        phi = np.sqrt(2*rho)/w
+        coupling = eta * (PLANCK_MASS_EV/(2*np.sqrt(PI)*phi))**coupling_order * timing_rescaling_factor
+
     return coupling
 
 def coupling_from_Lambda(Lambda, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
