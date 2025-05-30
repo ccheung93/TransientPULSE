@@ -2,13 +2,13 @@ import numpy as np
 
 # CONVERSION FACTORS
 SPEED_OF_LIGHT = 3e8                       # speed of light in m/s
-HBAR = 6.528e-16                           # reduced Planck constant in eV*s
+HBAR = 6.582e-16                           # reduced Planck constant in eV*s # NOTE - HBAR wrong previously
 
 INEV_TO_METERS = 1.97e-7                   # eV^-1 to meters
 PC_TO_METERS = 3.086e16                    # parsecs to meters
 PC_TO_INEV = PC_TO_METERS/INEV_TO_METERS   # parsecs to 1/eV
-EV_TO_JOULES = 1.6e-19                     # eV to joules
-EV_TO_KG = EV_TO_JOULES/SPEED_OF_LIGHT**2  # eV to kg
+EV_TO_JOULES = 1.60218e-19                 # eV to joules
+EV_TO_KG = EV_TO_JOULES/SPEED_OF_LIGHT**2  # eV to kg from m = E/c^2
 
 MASS_SUN_KG = 2e30                         # mass of the sun in kg
 SOLAR_TO_EV = MASS_SUN_KG/EV_TO_KG         # eV to solar mass
@@ -71,7 +71,7 @@ R_EXP = 1 * METERS_TO_INEV
 
 PI = np.pi 
 
-def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw, integration_time=1): 
+def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, axion=False): 
     """ Calculate the energy density of phi at the Earth and rescaling factor calculated for an array of signal durations
     
     Args:
@@ -84,7 +84,8 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw, integra
                     dw * t_star >= 1, where dw = spread in energies and t_star = burst_duration
                     for a given wavepacket, aw = dw * t_star, where aw >= 1
                     aw = 1 corresponds to a Gaussian wavepacket, since it has minimum uncertainty
-        integration_time (float): integration time [days], default = 1 day
+        t_int (float): integration time [s], default = 1 day
+        t_int_DM (float): integration time for dark matter experiment [s], default = 1 year
 
     Returns:
         rho (float): energy density of phi at Earth [eV^4]
@@ -95,14 +96,14 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw, integra
     R = distance*PC_TO_INEV
     
     # Compute energy density of phi at Earth
-    rho = calc_rho(Etot, m_phi, energies, t_star, R, aw)
+    rho = calc_rho(Etot, m_phi, energies, t_star, R, aw, axion)
     
     # Compute rescaling factor (fraction in Eq. 46 in arXiv:2502.08716v1)
-    timing_rescaling_factor = calc_timing_rescaling_factor(m_phi, energies, t_star, R, aw, integration_time)
+    timing_rescaling_factor = calc_timing_rescaling_factor(m_phi, energies, t_star, R, aw, t_int=t_int, t_int_DM=t_int_DM, axion=axion)
     
     return rho, timing_rescaling_factor
 
-def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
+def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, axion=False):
     """ Calculate timing rescaling factor (fraction from Eq. 46 in arXiv:2502.08716v1)
                     t_int_DM^(1/4) * min(tau_DM^(1/4), t_int_DM^(1/4))
     trf = ----------------------------------------------------------------------------
@@ -110,23 +111,24 @@ def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
     Args:
         m_phi (float): mass of phi field [eV]
         w (array_like): array of individual particle energies [eV]
-        burst_duration (float): the duration of the burst emission at the source [1/eV]
+        t_star (float): the duration of the burst emission at the source [1/eV]
         R (float): distance between source and detector [1/eV]
         aw (float): wavepacket uncertainty parameter based on uncertainty principle:
                     dw * t_star >= 1, where dw = spread in energies and t_star = burst_duration
                     for a given wavepacket, aw = dw * t_star, where aw >= 1
                     aw = 1 corresponds to a Gaussian wavepacket, since it has minimum uncertainty
-        integration_time (float): integration time [days], default = 1 day
+        t_int (float): integration time [s], default = 1 day
+        t_int_DM (float): integration time for dark matter experiment [s], default = 1 year
 
     Returns:
         array_like: array of rescaling factors calculated for each signal duration [unitless]
     """
     # Convert integration time to seconds and then to inverse eV
-    integration_time_s = integration_time * DAY_TO_SEC
+    integration_time_s = t_int if t_int else DAY_TO_SEC
     t_int = np.full_like(w, integration_time_s * SEC_TO_INEV)
     
     # Set integration time in seconds for dark matter experiment
-    integration_time_DM_s = 1e6
+    integration_time_DM_s = t_int_DM if t_int_DM else YEAR_TO_SEC
     t_int_DM = np.full_like(w, integration_time_DM_s * SEC_TO_INEV)
     
     # Spread in energies from uncertainty principle: dw * t_star = aw -> dw = aw / t_star
@@ -137,19 +139,26 @@ def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
     dx_spread = (dw/w)*(R/q**2)
     
     # Calculate t_star_tilde, the signal duration at Earth (Eq. 43)
-    signal_duration = np.sqrt(t_star**2 + dx_spread**2)
-    
+    if axion:
+        dk = m_phi/(2*PI)
+        dt_burst = t_star * np.ones_like(w)
+        ineV_to_AU = 0.197e-18 * 1e9*206265/3.086e13 
+        print(PC_TO_INEV, 1/ineV_to_AU) # TODO - check conversion of R in axion code (AU or pc to ineV?) pc_to_ineV causes a 'wiggle' in the coupling
+        dt_wave_spreading = (dk / m_phi) * (R/PC_TO_INEV/ineV_to_AU) / (q**2 * np.sqrt(q**2 + 1)) # NOTE - discuss unit of R here
+        dt = np.maximum(dt_burst, dt_wave_spreading)
+    signal_duration = dt if axion else np.sqrt(t_star**2 + dx_spread**2) # TODO - discuss dt/sig_dur for axions
+
     # Calculate effective coherence time observed by the detector (Eq. 40)
     #              2*pi          2*pi*R
     # tau_star = -------- + ----------------
     #               dw        q^3*m*t_star
-    tau_star = 2*PI/dw + 2*PI*R/(q**3 * m_phi * t_star)
+    tau_star = 2*PI/dw*np.ones_like(w) if axion else 2*PI/dw + 2*PI*R/(q**3 * m_phi * t_star) # TODO - discuss tau_s for axions
     
     # Calculate coherence times for non-relativistic, ambient DM (Eq. 46)
     #            2*pi
     # tau_DM = ----------, m_DM = w
     #           m_DM*v^2
-    mass_DM = w
+    mass_DM = m_phi * np.ones_like(w) if axion else w # TODO - discuss mass_DM for axions 
     tau_DM = 2*PI/(mass_DM*AVG_VEL_DM**2)
     
     timing_rescaling_factor = [
@@ -160,7 +169,7 @@ def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, integration_time=1):
     
     return timing_rescaling_factor
 
-def calc_rho(Etot, m_phi, w, t_star, R, aw):
+def calc_rho(Etot, m_phi, w, t_star, R, aw, axion=False):
     """ Calculate the energy density of phi at Earth in eV^4
     
     Args:
@@ -184,8 +193,8 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw):
     dx_burst = t_star
     
     # Spread of the phi wave during propagation
-    q = np.sqrt(np.maximum((w/m_phi)**2 - 1, 0))
-    dx_spread = (dw/w)*(R/np.maximum(q**2, 1e-99))
+    q = np.sqrt((w/m_phi)**2-1) if axion else np.sqrt(np.maximum((w/m_phi)**2 - 1, 0))
+    dx_spread = (dw/w)*(R/q) if axion else (dw/w)*(R/np.maximum(q**2, 1e-99)) # TODO - discuss 1/q for axion, 1/q^2 for scalars
     
     # Total spread of the wavepacket
     dx = dx_burst + dx_spread
@@ -195,7 +204,7 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw):
     
     return rho
 
-def coupling_probe(w, m, rho, timing_rescaling_factor, eta, coupling_order, coupling_type=None, axion=False):
+def coupling_probe(w, m, rho, timing_rescaling_factor, eta, coupling_order=None, coupling_type=None, axion=False):
     """ Calculate value of dilatonic coupling we can probe
 
     Args:
@@ -226,7 +235,7 @@ def coupling_probe(w, m, rho, timing_rescaling_factor, eta, coupling_order, coup
         raise ValueError(f"Unsupported coupling order: {coupling_order}")
     return coupling
 
-def coupling_from_Lambda(Lambda, coupling_order, coupling_type=None, constraint=None, multiplier=None, axion=False):
+def coupling_from_Lambda(Lambda, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
     """ Calculate coupling from Lambda for a given coupling order and type
     
     Args:

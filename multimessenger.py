@@ -81,7 +81,7 @@ def plot_supernova(ax, Elist, coupling_type):
             "txt_y": 3e29,
             "lbl_y": 3e31,
             "txt": r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
-            "line": [coupling_from_Lambda(1e12, 2)] * len(Elist)
+            "line": [coupling_from_Lambda(1e12, coupling_order=2)] * len(Elist)
         },
         "electron": {
             "ylim": (.5e9, 5e33),
@@ -95,7 +95,7 @@ def plot_supernova(ax, Elist, coupling_type):
             "txt_y": 3e26,
             "lbl_y": 3e29,
             "txt": r'${\rm Supernova}~N N \rightarrow N N \phi \phi$',
-            "line": [coupling_from_Lambda(15e12, 2)] * len(Elist)
+            "line": [coupling_from_Lambda(15e12, coupling_order=2)] * len(Elist)
         }
     }
     
@@ -186,12 +186,13 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
     plot_parameter_list(ax, i, j, coupling_type, 'quad', filename)
 
-def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=True):
+def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=True, show_plots=True):
     """Generate dilatonic coupling plots 
 
     Args:
         R (float): distance between the source and the experiment
         Etot (float): total energy of the burst [M_sun]
+        dt (float): time delay [s], default = 1 year
         coupling_type (str): type of coupling ('photon', 'electron' or 'gluon')
         coupling_order (str): coupling order ('linear' or 'quadratic')
     """
@@ -211,7 +212,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
     distance_label = get_distance_label(R) 
     filename = f"{distance_label}_{coupling_type}_{coupling_order}_dilatoniccoupling.pdf"
     wmp_contour = np.logspace(0,30,1000)
-    dt = 1 * 3.154e7 
+    
     Elist = mass[0][0]*wmp_contour
     Etot = Etot * SOLAR_TO_EV
 
@@ -246,13 +247,13 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
             
             setup_axes(axij, formatter, coupling_order)
             
-            rho, rescaling_factor = signal_duration(Etot, m, Elist, t, R, 1)
+            rho, rescaling_factor = signal_duration(Etot, m, Elist, t, R, 1, t_int=DAY_TO_SEC, t_int_DM=1e6, axion=False)
             
             wm_dt = omegaoverm_noscreen(dt, R)
             wm_day = omegaoverm_noscreen(DAY_TO_SEC, R)
             
             if coupling_order == 'linear':
-                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, 1)
+                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, coupling_order=1)
                 
                 dday30 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 ddt30 = coupling_from_delta_t(dt, R, m, Elist, 30e3, K_space)
@@ -260,7 +261,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
                 linear_plot(axij, i, j, coupling, m, Elist, t, dday30, ddt30, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
                 
             elif coupling_order == 'quad':
-                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, 2)
+                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, coupling_order=2)
 
                 d_screen_earth = coupling_critical(Elist, R_E, RHO_E, m, K_E)
                 d_screen_atm = coupling_critical(Elist, R_ATM, RHO_ATM, m, K_atm)
