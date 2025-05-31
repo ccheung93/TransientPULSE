@@ -139,7 +139,7 @@ def calc_timing_rescaling_factor(m_phi, w, t_star, R, aw, t_int=DAY_TO_SEC, t_in
     dx_spread = (dw/w)*(R/q**2)
     
     # Calculate t_star_tilde, the signal duration at Earth (Eq. 43)
-    signal_duration = np.sqrt(t_star**2 + dx_spread**2)
+    signal_duration = t_star + dx_spread
 
     # Calculate effective coherence time observed by the detector (Eq. 40)
     #              2*pi          2*pi*R
