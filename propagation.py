@@ -186,7 +186,7 @@ def calc_rho(Etot, m_phi, w, t_star, R, aw, axion=False):
     dx_burst = t_star
     
     # Spread of the phi wave during propagation
-    q = np.sqrt((w/m_phi)**2-1) if axion else np.sqrt(np.maximum((w/m_phi)**2 - 1, 0))
+    q = np.sqrt(np.maximum((w/m_phi)**2 - 1, 0))
     dx_spread = (dw/w)*(R/np.maximum(q**2, 1e-99))
     
     # Total spread of the wavepacket
@@ -214,8 +214,8 @@ def coupling_probe(w, m, rho, timing_rescaling_factor, eta, coupling_order=None,
     """
     if axion:
         g_DM = G_DM_BENCHMARKS[coupling_type] * DEFAULT_NORMALIZATION_MULTIPLIER[coupling_type]
-        v_star = np.sqrt(1-m**2/w**2)
-        velocity_ratio = AVG_VEL_DM/v_star if coupling_type in ['electron', 'proton', 'neutron'] else 1
+        v_star = np.sqrt(np.maximum(0, 1 - m**2 / w**2))
+        velocity_ratio = AVG_VEL_DM/np.maximum(v_star, 1e-99) if coupling_type in ['electron', 'proton', 'neutron'] else 1
         coupling = g_DM * np.sqrt(RHO_DM_EV4/rho) * velocity_ratio * timing_rescaling_factor
     else:
         phi = np.sqrt(2*rho)/w
