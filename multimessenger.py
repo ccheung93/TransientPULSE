@@ -247,22 +247,18 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
             
             setup_axes(axij, formatter, coupling_order)
             
-            rho, rescaling_factor = signal_duration(Etot, m, Elist, t, R, 1, t_int=DAY_TO_SEC, t_int_DM=1e6, axion=False)
+            coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int_DM=1e6, coupling_order=coupling_order)
             
             wm_dt = omegaoverm_noscreen(dt, R)
             wm_day = omegaoverm_noscreen(DAY_TO_SEC, R)
             
             if coupling_order == 'linear':
-                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, coupling_order=1)
-                
                 dday30 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 ddt30 = coupling_from_delta_t(dt, R, m, Elist, 30e3, K_space)
                 
                 linear_plot(axij, i, j, coupling, m, Elist, t, dday30, ddt30, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
                 
             elif coupling_order == 'quad':
-                coupling = coupling_probe(Elist, m, rho, rescaling_factor, eta, coupling_order=2)
-
                 d_screen_earth = coupling_critical(Elist, R_E, RHO_E, m, K_E)
                 d_screen_atm = coupling_critical(Elist, R_ATM, RHO_ATM, m, K_atm)
                 d_screen_exp = coupling_critical(Elist, R_EXP, RHO_EXP, m, K_E)
