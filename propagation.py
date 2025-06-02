@@ -28,7 +28,7 @@ MASS_ELECTRON = 0.511e6                    # mass of electron in eV
 
 # Define normalization multipliers for electron and photon couplings
 DEFAULT_NORMALIZATION_MULTIPLIER = {
-    'electron': 1/(2*MASS_ELECTRON/GIGA_TO_BASE),
+    'electron': 1/(2*MASS_ELECTRON/GIGA_TO_BASE), # 1/GeV
     'photon': 1/4,
     'proton': 1,
     'neutron': 1,
@@ -103,15 +103,15 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int
     
     # Compute signal duration
     dx_spread = calc_wave_spread(q, energies, dw, R)
-    signal_duration = calc_total_wave_spread(t_star, dx_spread)
+    total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
     
     # Compute energy density of phi at Earth
-    rho = calc_rho(Etot, R, signal_duration) # NOTE - am i understanding right that the thickness of this spherical wave is just the signal duration calculated with the the dw/w * R/q^2 term?
+    rho = calc_rho(Etot, R, total_wave_spread) # NOTE - am i understanding right that the thickness of this spherical wave is just the signal duration calculated with the the dw/w * R/q^2 term?
     
     # Compute rescaling factor (fraction in Eq. 46 in arXiv:2502.08716v1)
     tau_star = calc_tau_star(m_phi, q, dw, R, t_star)
     tau_DM = calc_tau_DM(energies)
-    timing_rescaling_factor = calc_timing_rescaling_factor(signal_duration, tau_star, tau_DM, t_int=t_int, t_int_DM=t_int_DM)
+    timing_rescaling_factor = calc_timing_rescaling_factor(total_wave_spread, tau_star, tau_DM, t_int=t_int, t_int_DM=t_int_DM)
     
     return rho, timing_rescaling_factor
 
@@ -302,7 +302,7 @@ def convert_coupling_order_str_to_int(coupling_order):
 
 def coupling_from_Lambda(Lambda, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
     """ Calculate coupling from Lambda for a given coupling order and type
-    
+        TODO - discuss if axion calculations belong in this function
     Args:
         Lambda (float): energy scale for new physics
         coupling_order (int): coupling order
@@ -321,8 +321,8 @@ def coupling_from_Lambda(Lambda, coupling_order=None, coupling_type=None, constr
     else:
         return ((1/np.sqrt(4*PI))*(PLANCK_MASS_EV/Lambda))**coupling_order
 
-def q_from_delta_t(dt, R):
-    """ Calculate q from a time delay (Eq. 36)
+def q_from_time_delay(dt, R):
+    """ Calculate q from a time delay (Eq. 36) # TODO - discuss renaming this 'q' to 'omega_over_m'?
 
     Args:
         dt (float): time_delay [m]
@@ -333,7 +333,7 @@ def q_from_delta_t(dt, R):
     """
     return 1 / np.sqrt(1 - 1 / (1 + dt / R)**2)
 
-def coupling_from_delta_t(dt, R, m, E, Dg, K, axion=False):
+def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
     """ Calculate coupling from a time delay 
         (calculates d_i^(2) from Eq.39 in arXiv:2502.08716v1)
     
@@ -352,7 +352,7 @@ def coupling_from_delta_t(dt, R, m, E, Dg, K, axion=False):
     R_meters = R * PC_TO_METERS
     dt_c = dt * SPEED_OF_LIGHT
     
-    q = q_from_delta_t(dt_c, R_meters) # TODO - explain difference between q_from_delta_t and q from coupling_probe
+    q = q_from_time_delay(dt_c, R_meters) # TODO - explain difference between q_from_time_delay and q from coupling_probe
     
     if axion:
         Em = m * q  # TODO - explain how we're defining axion coupling here
@@ -382,11 +382,11 @@ def coupling_from_delta_t(dt, R, m, E, Dg, K, axion=False):
         coupling = prefactor * numer / denom
     return coupling
 
-def omegaoverm_noscreen(dt, R):
-    """ Returns omega/m without screening (beta(x) = 0)
-        omega           R+dt
-        ----- = ---------------------
-          m     sqrt(2*R*dt + dt**2)
+def omegaoverm_noscreen(dt, R): # NOTE - this may be the same as q_from_time_delay - discuss
+    """ Returns omega/m without screening (beta(x) = 0) (Solve Eq. 35 for q)
+             omega              R+dt
+            ------- = ------------------------
+               m        sqrt(2*R*dt + dt**2)
           
     Args:
         dt (float): time delay [s]

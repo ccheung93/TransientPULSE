@@ -247,14 +247,14 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
             
             setup_axes(axij, formatter, coupling_order)
             
-            coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int_DM=1e6, coupling_order=coupling_order)
+            coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int=YEAR_TO_SEC, t_int_DM=1e6, coupling_order=coupling_order)
             
-            wm_dt = omegaoverm_noscreen(dt, R)
+            wm_dt = omegaoverm_noscreen(dt, R) # NOTE - dt -> YEAR_TO_SEC or dt -> t_int
             wm_day = omegaoverm_noscreen(DAY_TO_SEC, R)
             
             if coupling_order == 'linear':
-                dday30 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
-                ddt30 = coupling_from_delta_t(dt, R, m, Elist, 30e3, K_space)
+                dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
+                ddt30 = coupling_from_time_delay(dt, R, m, Elist, 30e3, K_space)
                 
                 linear_plot(axij, i, j, coupling, m, Elist, t, dday30, ddt30, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
                 
@@ -263,11 +263,11 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
                 d_screen_atm = coupling_critical(Elist, R_ATM, RHO_ATM, m, K_atm)
                 d_screen_exp = coupling_critical(Elist, R_EXP, RHO_EXP, m, K_E)
                 
-                dday1 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 1e3, K_space)
-                ddt1 = coupling_from_delta_t(dt, R, m, Elist, 1e3, K_space)
+                dday1 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 1e3, K_space)
+                ddt1 = coupling_from_time_delay(dt, R, m, Elist, 1e3, K_space)
                 
-                dday30 = coupling_from_delta_t(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
-                ddt30 = coupling_from_delta_t(dt, R, m, Elist, 30e3, K_space)
+                dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
+                ddt30 = coupling_from_time_delay(dt, R, m, Elist, 30e3, K_space)
                 
                 quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, ddt1, dday30, ddt30, wm_dt, wm_day, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, filename)
 
