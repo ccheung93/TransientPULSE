@@ -71,8 +71,8 @@ R_EXP = 1 * METERS_TO_INEV
 
 PI = np.pi 
 
-def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC): 
-    """ Calculate the energy density of phi at the Earth and rescaling factor calculated for an array of signal durations - NOTE - new name for this function
+def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC): 
+    """ Calculate the energy density of phi at the Earth and timing rescaling factor calculated for a spectrum
     
     Args:
         Etot (float): total energy of emitted phi particles from the source [eV]
@@ -96,7 +96,7 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int
     R = distance*PC_TO_INEV
     
     # Compute q values
-    q = calc_q(m_phi, energies)
+    q = calc_k_over_m(m_phi, energies)
     
     # Compute spread in energies from uncertainty principle
     dw = calc_energy_spread(t_star, aw=aw)
@@ -106,7 +106,7 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int
     total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
     
     # Compute energy density of phi at Earth
-    rho = calc_rho(Etot, R, total_wave_spread) # NOTE - am i understanding right that the thickness of this spherical wave is just the signal duration calculated with the the dw/w * R/q^2 term?
+    rho = calc_rho(Etot, R, total_wave_spread)
     
     # Compute rescaling factor (fraction in Eq. 46 in arXiv:2502.08716v1)
     tau_star = calc_tau_star(m_phi, q, dw, R, t_star)
@@ -115,11 +115,11 @@ def signal_duration(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int
     
     return rho, timing_rescaling_factor
 
-def calc_q(m_phi, w):
-    """ Calculate momentum-to-mass ratio q NOTE - confusing when also defining q=w/m_eff (Eq.36)
-                 k     sqrt(w^2 - m^2)
-            q = --- = ----------------- = sqrt((w/m)^2 - 1)
-                 m           m
+def calc_k_over_m(m_phi, w):
+    """ Calculate momentum-to-mass ratio
+             k     sqrt(w^2 - m^2)
+            --- = ----------------- = sqrt((w/m)^2 - 1)
+             m           m
 
     Args:
         m_phi (float): mass of phi field [eV]
@@ -146,7 +146,9 @@ def calc_energy_spread(t_star, aw=1):
 
 def calc_wave_spread(q, w, dw, R):
     """ Calculate wave spread during propagation (second term of Eq. 43)
-
+                              dw      R
+            delta_x_spread = ----- -------
+                               w     q^2   
     Args:
         q (array_like): q values [unitless]
         w (array_like): individual particle energies [eV]
@@ -159,17 +161,14 @@ def calc_wave_spread(q, w, dw, R):
     return (dw/w)*(R/np.maximum(q**2, 1e-99))
 
 def calc_total_wave_spread(dx_burst, dx_spread):
-    """ Calculate total spread of the wavepacket - NOTE - Eq. 31 vs 43, also signal duration at Earth? (Eq. 43)
+    """ Calculate total spread of the wavepacket
             x_star_tilde = x_star + delta_x_spread (Eq. 31)
-                                     dw      R
-            t_star_tilde = t_star + ----- -------  (Eq. 43)
-                                      w     q^2
     Args:
         dx_burst (array_like): width of wave shell at the source [1/eV]
         dx_spread (array_like): spread of wave shell due to propagation [1/eV]
 
     Returns:
-        array_like: total spread of the wavepacket [1/eV]  NOTE - signal duration?
+        array_like: total spread of the wavepacket [1/eV]
     """
     return dx_burst + dx_spread
 
@@ -263,7 +262,7 @@ def coupling_probe(Etot, t, R, w, m, eta, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_
     Returns:
         float: value of coupling we can probe
     """
-    rho, timing_rescaling_factor = signal_duration(Etot, m, w, t, R, aw=aw, t_int=t_int, t_int_DM=t_int_DM)
+    rho, timing_rescaling_factor = signal(Etot, m, w, t, R, aw=aw, t_int=t_int, t_int_DM=t_int_DM)
     
     if axion:
         g_DM = G_DM_BENCHMARKS[coupling_type] * DEFAULT_NORMALIZATION_MULTIPLIER[coupling_type]
@@ -300,9 +299,11 @@ def convert_coupling_order_str_to_int(coupling_order):
         else:
             raise ValueError(f"{coupling_order} is not a valid coupling order.")
 
-def coupling_from_Lambda(Lambda, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
-    """ Calculate coupling from Lambda for a given coupling order and type
-        TODO - discuss if axion calculations belong in this function
+def coupling_conversion(Lambda, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
+    """ Converts between other common normalization conventions 
+        For scalars: from energy scale (Lambda) to dilatonic coupling
+        For axions: from different normalization conventions for astrophysical bounds or lab bounds
+
     Args:
         Lambda (float): energy scale for new physics
         coupling_order (int): coupling order
@@ -322,7 +323,7 @@ def coupling_from_Lambda(Lambda, coupling_order=None, coupling_type=None, constr
         return ((1/np.sqrt(4*PI))*(PLANCK_MASS_EV/Lambda))**coupling_order
 
 def q_from_time_delay(dt, R):
-    """ Calculate q from a time delay (Eq. 36) # TODO - discuss renaming this 'q' to 'omega_over_m'?
+    """ Calculate q from a time delay (Eq. 36), assuming constant beta
 
     Args:
         dt (float): time_delay [m]
@@ -335,7 +336,8 @@ def q_from_time_delay(dt, R):
 
 def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
     """ Calculate coupling from a time delay 
-        (calculates d_i^(2) from Eq.39 in arXiv:2502.08716v1)
+        For scalars: calculates d_i^(2) from Eq.39 in arXiv:2502.08716v1
+        For axions: coupling corresponds to a constant value since axions do not exhibit screening
     
     Args:
         dt (float): time delay [s]
@@ -352,10 +354,11 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
     R_meters = R * PC_TO_METERS
     dt_c = dt * SPEED_OF_LIGHT
     
-    q = q_from_time_delay(dt_c, R_meters) # TODO - explain difference between q_from_time_delay and q from coupling_probe
+    q = q_from_time_delay(dt_c, R_meters)
     
     if axion:
-        Em = m * q  # TODO - explain how we're defining axion coupling here
+        # axions do not exhibit screening, so time delays correspond to a constant q value, regardless of the coupling
+        Em = m * q  
         return [0 if Ei < Em else 1e100 for Ei in E]
     
     # Galaxy number density [galaxies / Gpc^3]
@@ -381,23 +384,6 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
         denom = Ng_eff*Dg/R*RHO_ISM*K + (1-(Ng_eff*Dg/R))*RHO_IGM*K
         coupling = prefactor * numer / denom
     return coupling
-
-def omegaoverm_noscreen(dt, R): # NOTE - this may be the same as q_from_time_delay - discuss
-    """ Returns omega/m without screening (beta(x) = 0) (Solve Eq. 35 for q)
-             omega              R+dt
-            ------- = ------------------------
-               m        sqrt(2*R*dt + dt**2)
-          
-    Args:
-        dt (float): time delay [s]
-        R (float): distance between source and detection [pc]
-    
-    Returns:
-        omega_over_m (float): frequency to mass ratio
-    """
-    R = R * PC_TO_METERS
-    dt = dt * SPEED_OF_LIGHT
-    return (R + dt)/(np.sqrt(dt * (2*R+dt)))
 
 def coupling_critical(E, R, rho, m, K):
     """ Calculate the critical values of the quadratic dilatonic coupling 
