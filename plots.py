@@ -25,9 +25,9 @@ def setup_axes(ax, formatter, coupling_order):
         ax.set_ylim(1e-9,0.9e0)
     ax.tick_params(direction="in")
     
-def add_label(ax, x, y, txt, rotation = 0, fontsize = 25, 
-              color = 'black', edgecolor = 'black', facecolor = 'white', 
-              alpha = 1 , boxstyle = 'round,pad=0.1'):
+def add_boxed_label(ax, x, y, txt, rotation = 0, fontsize = 25, 
+                    color = 'black', edgecolor = 'black', facecolor = 'white', 
+                    alpha = 1 , boxstyle = 'round,pad=0.1'):
     """Adds a text box label at position (x, y)
     
     Args:
