@@ -34,39 +34,29 @@ def plot_supernova(ax, Elist, coupling_type):
     supernova_config = {
         "photon": {
             "ylim": (.5e6, 8e32),
-            "txt_y": 3e29,
             "lbl_y": 3e31,
             "txt": r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
             "line": [coupling_conversion(1e12, coupling_order=2)] * len(Elist)
         },
         "electron": {
             "ylim": (.5e9, 5e33),
-            "txt_y": 3e29,
             "lbl_y": 1e32,
             "txt": r'${\rm Supernova}~e^+ e^- \rightarrow \phi \phi$',
             "line": [5e31] * len(Elist)
         },
         "gluon": {
             "ylim": (.5e4, 5e30),
-            "txt_y": 3e26,
             "lbl_y": 3e29,
             "txt": r'${\rm Supernova}~N N \rightarrow N N \phi \phi$',
             "line": [coupling_conversion(15e12, coupling_order=2)] * len(Elist)
         }
     }
     
-    txt_x = 1e-19
     lbl_x = 1e-19
-    omega_txt = r'$\omega\,t_{*} \lesssim \, 2\pi$'
-    bbox_style = dict(facecolor='white', 
-                      alpha = 1, 
-                      edgecolor='chocolate', 
-                      boxstyle='round,pad=.1')
     
     if coupling_type in supernova_config:
         config = supernova_config[coupling_type]
         ax.set_ylim(*config["ylim"])
-        ax.text(txt_x, config["txt_y"], omega_txt, color = 'tab:brown', bbox = bbox_style)
         ax.text(lbl_x, config["lbl_y"], config["txt"], fontsize = 30, color = 'black')
         ax.plot(Elist, config["line"], color = 'gray', linewidth = 3)
         ax.fill_between(Elist, config["line"], 1e100, color = 'gray', alpha = 0.1)
@@ -110,6 +100,7 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     d_exp = d_screen_exp[condition_mask]
     
     plot_supernova(ax, Elist, coupling_type)
+    label_uncertainty_exclusion(ax, coupling_type)
     label_critical_screening(ax, K_E, K_atm, coupling_type, filename)
     
     if R < 1e5:

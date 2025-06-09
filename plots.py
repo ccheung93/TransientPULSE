@@ -157,7 +157,23 @@ def label_E_unc(ax, E_unc, filename):
             pos_x, pos_y = val["pos"]
             txt = r'$\omega\,t_{*} \lesssim \, 2\pi$' # omega t_star <~ 2pi
             ax.text(pos_x, pos_y, txt, color = 'tab:brown', bbox = bbox_style("chocolate"))
+
+def label_uncertainty_exclusion(ax, coupling_type):
+    """ Label region in parameter space that is excluded due to the uncertainty principle """
+    txt_x = 1e-19
+    txt_y = {
+        'photon': 3e29,
+        'electron': 3e29,
+        'gluon': 3e26
+    }
+    label = r'$\omega\,t_{*} \lesssim \, 2\pi$'
+    bbox_style = dict(facecolor='white', 
+                      alpha = 1, 
+                      edgecolor='chocolate', 
+                      boxstyle='round,pad=.1')
     
+    ax.text(txt_x, txt_y[coupling_type], label, color = 'tab:brown', bbox = bbox_style)
+
 def plot_mass_exclusion(ax, m, coupling_order):
     """ Plot region excluded due to the scalar energy being less than its mass """
     ax.axvline(m, c = 'k', linestyle = '--')
