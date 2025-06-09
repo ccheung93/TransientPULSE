@@ -61,7 +61,7 @@ def plot_supernova(ax, Elist, coupling_type):
         ax.plot(Elist, config["line"], color = 'gray', linewidth = 3)
         ax.fill_between(Elist, config["line"], 1e100, color = 'gray', alpha = 0.1)
 
-def linear_plot(ax, i, j, coupling, m, Elist, t, dday, ddt, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename):
+def linear_plot(ax, i, j, coupling, m, Elist, R, dday, ddt, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename):
     """ Plots for linear coupling_order """
 
     plot_MICROSCOPE(ax, Elist, Microscope_m)
@@ -80,7 +80,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, t, dday, ddt, wm_dt, wm_day, Micro
     plot_d_from_delta_t(ax, Elist, dday, ddt)
     
     label_d_from_delta_t(ax, m, wm_dt, wm_day, 'linear')
-    label_E_unc(ax, E_unc, filename)
+    label_uncertainty_exclusion(ax, E_unc=E_unc, R=R)
     plot_parameter_list(ax, i, j, coupling_type, 'linear', filename)
 
 def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, wm_dt, wm_day, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, filename):
@@ -100,7 +100,7 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     d_exp = d_screen_exp[condition_mask]
     
     plot_supernova(ax, Elist, coupling_type)
-    label_uncertainty_exclusion(ax, coupling_type)
+    label_uncertainty_exclusion(ax, coupling_type=coupling_type)
     label_critical_screening(ax, K_E, K_atm, coupling_type, filename)
     
     if R < 1e5:
@@ -207,7 +207,7 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
-                linear_plot(axij, i, j, coupling, m, Elist, t, dday30, dyear30, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
+                linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, wm_dt, wm_day, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
                 
             elif coupling_order == 'quad':
                 d_screen_earth = coupling_critical(Elist, R_E, RHO_E, m, K_E)

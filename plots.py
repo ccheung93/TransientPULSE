@@ -134,45 +134,31 @@ def plot_E_unc(ax, E_unc):
     ymin = 1e-50
     ymax = 1e50
     ax.fill_betweenx([ymin, ymax], x1=ymin, x2=E_unc, color = 'chocolate', alpha = 0.1)
-    
-def label_E_unc(ax, E_unc, filename):
-    """ Plot omega*t_star <~ 2*pi """
-    # Define lambda for bbox style
-    bbox_style = lambda color: dict(facecolor = 'white', alpha = 1, edgecolor = color, boxstyle = 'round,pad=.1')
-    
-    # Define plot configurations for relevant distance scales
-    distance_scale_config = {
-        "10Mpc_": {
-            "pos": (E_unc/200, 1e-1),
-            "txt": r'$E_{\rm tot} = M_{\odot}$'+'\n' + r'$R = 10~{\rm Mpc}$'
-        },
-        "10kpc_": {
-            "pos": (1e-20, 1e-2),
-            "txt": r'$E_{\rm tot} = 10^{-2} M_{\odot}$'+'\n' + r'$R = 10~{\rm kpc}$'
-        }
-    }
-    
-    for prefix, val in distance_scale_config.items():
-        if filename.startswith(prefix):
-            pos_x, pos_y = val["pos"]
-            txt = r'$\omega\,t_{*} \lesssim \, 2\pi$' # omega t_star <~ 2pi
-            ax.text(pos_x, pos_y, txt, color = 'tab:brown', bbox = bbox_style("chocolate"))
 
-def label_uncertainty_exclusion(ax, coupling_type):
+def label_uncertainty_exclusion(ax, E_unc=None, R=None, coupling_type=None):
     """ Label region in parameter space that is excluded due to the uncertainty principle """
-    txt_x = 1e-19
-    txt_y = {
-        'photon': 3e29,
-        'electron': 3e29,
-        'gluon': 3e26
-    }
+    if E_unc is not None and R is not None:
+        if R < 1e5:
+            pos_x, pos_y = 1e-20, 1e-2
+        else:
+            pos_x, pos_y = E_unc/200, 1e-1
+    elif coupling_type is not None:
+        pos_x = 1e-19
+        pos_y = {
+            'photon': 3e29,
+            'electron': 3e29,
+            'gluon': 3e26
+        }[coupling_type]
+    else:
+        raise ValueError('Must provide either (E_unc and R) or coupling_type.')
+    
     label = r'$\omega\,t_{*} \lesssim \, 2\pi$'
     bbox_style = dict(facecolor='white', 
                       alpha = 1, 
                       edgecolor='chocolate', 
                       boxstyle='round,pad=.1')
     
-    ax.text(txt_x, txt_y[coupling_type], label, color = 'tab:brown', bbox = bbox_style)
+    ax.text(pos_x, pos_y, label, color = 'tab:brown', bbox = bbox_style)
 
 def plot_mass_exclusion(ax, m, coupling_order):
     """ Plot region excluded due to the scalar energy being less than its mass """
