@@ -51,6 +51,32 @@ ASTROPHYSICAL_CONSTRAINT_BENCHMARKS = {
     'EDM': 6.7e-9
 }
 
+# Fraction of energy density of specific regimes ('space', 'earth', 'atmosphere') that is from the coupling type
+ENERGY_DENSITY_FRACTIONS = {
+    'space': {
+        'photon': 6.3e-4,
+        'electron': 4.4e-4,
+        'gluon': 1
+    },
+    'earth': {
+        'photon': 1.9e-3,
+        'electron': 2.4e-4,
+        'gluon': 1
+    },
+    'atmosphere': {
+        'photon': 9.5e-4,
+        'electron': 2.7e-4,
+        'gluon': 1
+    }
+}
+
+# Fractional sensitivity of the coupling type to a dark matter signal
+DM_SENSITIVITIES = {
+    'photon': 1e-19/6000,
+    'electron': 1e-17,
+    'gluon': 1e-24
+}
+
 # Densities of ISM and IGM converted from g/cm^3 to eV^4
 RHO_ISM_GCM3 = 1.67e-24
 RHO_ISM = RHO_ISM_GCM3 * GCM3_TO_EV4

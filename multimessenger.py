@@ -30,50 +30,6 @@ def get_distance_label(R):
     
     return distance_label
 
-def get_K_params(coupling_type, coupling_order):
-    """ Set parameters based on coupling_type
-
-    Args:
-        coupling_type (str): type of coupling (photon, electron, gluon)
-        coupling_order (str): order of coupling (linear or quadratic)
-
-    Returns:
-        K_space (float): fraction of energy density of the ISM that is from coupling_type
-        K_E (float): fraction of energy density of the Earth that is from coupling_type
-        K_atm (float): fraction of energy density of the atmosphere that is from coupling_type
-        eta (float): fractional sensitivity of coupling_type to dark matter signal
-        ylabel (str): y-axis label
-    """
-    if coupling_type == 'photon':
-        K_space = 6.3e-4
-        K_E = 1.9e-3
-        K_atm = 9.5e-4
-        eta = 1e-19/6000
-        if coupling_order == 'linear':
-            ylabel = r'$\log_{10}(d^{(1)}_e)$'
-        if coupling_order == 'quad':    
-            ylabel = r'$\log_{10}(d^{(2)}_e)$'
-    elif coupling_type == 'electron':
-        K_space = 4.4e-4
-        K_E = 2.4e-4
-        K_atm = 2.7e-4
-        eta = 1e-17
-        if coupling_order == 'linear':
-            ylabel = r'$\log_{10}(d^{(1)}_{m_e})$'
-        if coupling_order == 'quad':
-            ylabel = r'$\log_{10}(d^{(2)}_{m_e})$'
-    elif coupling_type == 'gluon':
-        K_space = 1.0
-        K_E = 1.0
-        K_atm = 1.0
-        eta = 1e-24
-        if coupling_order == 'linear':
-            ylabel = r'$\log_{10}(d^{(1)}_g)$'
-        if coupling_order == 'quad':    
-            ylabel = r'$\log_{10}(d^{(2)}_g)$'
-            
-    return K_space, K_E, K_atm, eta, ylabel
-
 def plot_supernova(ax, Elist, coupling_type):
     supernova_config = {
         "photon": {
@@ -216,7 +172,11 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
     Elist = mass[0][0]*wmp_contour
     Etot = Etot * SOLAR_TO_EV
 
-    K_space, K_E, K_atm, eta, ylabel = get_K_params(coupling_type, coupling_order)
+    K_space = ENERGY_DENSITY_FRACTIONS['space'][coupling_type]
+    K_E = ENERGY_DENSITY_FRACTIONS['earth'][coupling_type]
+    K_atm = ENERGY_DENSITY_FRACTIONS['atmosphere'][coupling_type]
+    eta = DM_SENSITIVITIES[coupling_type]
+    ylabel = COUPLING_LABELS[coupling_order][coupling_type]
 
     # Load constraints for linear coupling order
     if coupling_order == "linear":

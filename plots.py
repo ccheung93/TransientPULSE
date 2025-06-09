@@ -2,6 +2,19 @@ import numpy as np
 
 COLORLIST = ["tab:red", "tab:orange", "tab:purple"]
 
+COUPLING_LABELS = {
+    'linear': {
+        'photon': r'$\log_{10}(d^{(1)}_e)$',
+        'electron': r'$\log_{10}(d^{(1)}_{m_e})$',
+        'gluon': r'$\log_{10}(d^{(1)}_g)$'
+    },
+    'quad': {
+        'photon': r'$\log_{10}(d^{(2)}_e)$',
+        'electron': r'$\log_{10}(d^{(2)}_{m_e})$',
+        'gluon': r'$\log_{10}(d^{(2)}_g)$'
+    }
+}
+
 def setup_axes(ax, formatter, coupling_order):
     """ Set up axes for subplot (i, j) """
     ax.xaxis.set_major_formatter(formatter)
