@@ -209,8 +209,8 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
             
             coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int=YEAR_TO_SEC, t_int_DM=1e6, coupling_order=coupling_order)
             
-            wm_dt = q_from_time_delay(YEAR_TO_SEC, R)
-            wm_day = q_from_time_delay(DAY_TO_SEC, R)
+            wm_dt = q_from_time_delay(YEAR_TO_SEC*SPEED_OF_LIGHT, R*PC_TO_METERS)
+            wm_day = q_from_time_delay(DAY_TO_SEC*SPEED_OF_LIGHT, R*PC_TO_METERS)
             
             if coupling_order == 'linear':
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
