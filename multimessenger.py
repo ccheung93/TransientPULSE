@@ -7,8 +7,6 @@ from propagation import *
 from limits import *
 from plots import *
 
-COLORLIST = ["tab:red", "tab:orange", "tab:purple"]
-
 def exponentlabel(x, pos):
     return str("{:.0f}".format(np.log10(x)))
 

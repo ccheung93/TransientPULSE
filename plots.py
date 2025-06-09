@@ -1,7 +1,5 @@
 import numpy as np
 
-COLORLIST = ["tab:red", "tab:orange", "tab:purple"]
-
 COUPLING_LABELS = {
     'linear': {
         'photon': r'$\log_{10}(d^{(1)}_e)$',
@@ -69,15 +67,15 @@ def plot_FifthForce(ax, range_x, fifthForce_m):
     """ Plot fifth-force limits """
     ax.plot(range_x, fifthForce_m)
 
-def plot_d_from_delta_t(ax, range_x, dday, ddt):
-    """ Plot the detection delays of 1 day and integration time relative to a light-speed signal """
-    ax.plot(range_x, dday, color = COLORLIST[2], linewidth = 2, linestyle = '--'  )
-    ax.plot(range_x, ddt, color = COLORLIST[0], linewidth = 2, linestyle = '--'  )
+def plot_d_from_delta_t(ax, range_x, dday, dyear):
+    """ Plot the detection delays of 1 day and 1 year relative to a light-speed signal """
+    ax.plot(range_x, dday, color ='tab:purple', linewidth = 2, linestyle = '--'  )
+    ax.plot(range_x, dyear, color = 'tab:red', linewidth = 2, linestyle = '--'  )
     
-def plot_fill_d_from_delta_t(ax, range_x, ddt_day1, ddt_day30, ddt1, ddt30):
-    """ Shade in area between dilatonic coupling curves"""
-    ax.fill_between(range_x, ddt_day1, ddt_day30, color = COLORLIST[2], alpha = 0.1)
-    ax.fill_between(range_x, ddt1, ddt30, color = COLORLIST[0], alpha = 0.1)
+def plot_fill_d_from_delta_t(ax, range_x, ddt_day1, ddt_day30, dyear1, dyear30):
+    """ Fill in region between dilatonic coupling curves"""
+    ax.fill_between(range_x, ddt_day1, ddt_day30, color = 'tab:purple', alpha = 0.1)
+    ax.fill_between(range_x, dyear1, dyear30, color = 'tab:red', alpha = 0.1)
 
 def label_d_from_delta_t(ax, m, omega_over_m_dt, omega_over_m_day, coupling_order):
     bbox_style = lambda color: dict(facecolor = 'white', alpha = 1, edgecolor = color, boxstyle = 'round,pad=.1')
