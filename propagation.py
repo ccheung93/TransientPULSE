@@ -159,8 +159,8 @@ def calc_k_over_m(m_phi, w):
 def calc_energy_spread(t_star, aw=1):
     """ Calculate spread in energies from uncertainty principle: 
                      aw
-            dw = ----------
-                   t_star
+            dw = ------------
+                   2*t_star
     Args:
         t_star (float): the duration of the burst emission at the source [1/eV]
         aw (float): wavepacket uncertainty parameter based on uncertainty principle
@@ -168,7 +168,7 @@ def calc_energy_spread(t_star, aw=1):
     Returns:
         float: spread in energies [eV]
     """
-    return aw/t_star
+    return aw/(2*t_star)
 
 def calc_wave_spread(q, w, dw, R):
     """ Calculate wave spread during propagation (second term of Eq. 43)
