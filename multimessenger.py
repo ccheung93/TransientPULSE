@@ -133,7 +133,6 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
     K_E = ENERGY_DENSITY_FRACTIONS['earth'][coupling_type]
     K_atm = ENERGY_DENSITY_FRACTIONS['atmosphere'][coupling_type]
     eta = DM_SENSITIVITIES[coupling_type]
-    ylabel = COUPLING_LABELS[coupling_order][coupling_type]
 
     # Load constraints for linear coupling order
     if coupling_order == "linear":
@@ -193,12 +192,7 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
             ax[i,1].set_ylabel(r'$t_*$ = '+str(int(ts[i][0]))+r' s',labelpad = 40,rotation = 270)
             ax[i,1].yaxis.set_label_position("right")
 
-    # Shared axis labels
-    shadowaxes = fig.add_subplot(111, xticks=[], yticks=[], frame_on=False)
-    shadowaxes.set_ylabel(ylabel, fontsize = 45)
-    shadowaxes.set_xlabel(r'$\log_{10}(\omega/\rm{eV})$', fontsize= 45)
-    shadowaxes.xaxis.labelpad=50
-    shadowaxes.yaxis.labelpad=50
+    setup_axis_labels(fig, coupling_order, coupling_type)
     
     if save_plots: plt.savefig(filename,dpi = 1500)
     if show_plots: plt.show()

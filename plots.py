@@ -11,6 +11,13 @@ COUPLING_LABELS = {
         'photon': r'$\log_{10}(d^{(2)}_e)$',
         'electron': r'$\log_{10}(d^{(2)}_{m_e})$',
         'gluon': r'$\log_{10}(d^{(2)}_g)$'
+    },
+    'axion': {
+        'proton': r'$\log_{10}(g_{\phi PP}/\text{GeV}^{-1})$',
+        'electron': r'$\log_{10}(g_{\phi e}/\text{GeV}^{-1})$',
+        'neutron': r'$\log_{10}(g_{\phi NN}/\text{GeV}^{-1})$',
+        'photon': r'$\log_{10}(g_{\phi\gamma\gamma}/\text{GeV}^{-1})$',
+        'EDM': r'$\log_{10}(|g_{\phi P\gamma}|/\text{GeV}^{-2})$'
     }
 }
 
@@ -23,6 +30,13 @@ def setup_axes(ax, formatter, coupling_order):
     if coupling_order == 'linear': 
         ax.set_ylim(1e-9,0.9e0)
     ax.tick_params(direction="in")
+    
+def setup_axis_labels(fig, coupling_order, coupling_type):
+    shadowaxes = fig.add_subplot(111, xticks=[], yticks=[], frame_on=False)
+    shadowaxes.set_ylabel(COUPLING_LABELS[coupling_order][coupling_type], fontsize = 45)
+    shadowaxes.set_xlabel(r'$\log_{10}(\omega/\rm{eV})$', fontsize= 45)
+    shadowaxes.xaxis.labelpad=50
+    shadowaxes.yaxis.labelpad=50
     
 def add_boxed_label(ax, x, y, txt, rotation = 0, fontsize = 25, 
                     color = 'black', edgecolor = 'black', facecolor = 'white', 
