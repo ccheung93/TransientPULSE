@@ -1,4 +1,5 @@
 import numpy as np
+from propagation import DAY_TO_SEC, YEAR_TO_SEC
 
 COUPLING_LABELS = {
     'linear': {
@@ -77,35 +78,26 @@ def plot_fill_d_from_delta_t(ax, range_x, ddt_day1, ddt_day30, dyear1, dyear30):
     ax.fill_between(range_x, ddt_day1, ddt_day30, color = 'tab:purple', alpha = 0.1)
     ax.fill_between(range_x, dyear1, dyear30, color = 'tab:red', alpha = 0.1)
 
-def label_d_from_delta_t(ax, m, omega_over_m_dt, omega_over_m_day, coupling_order):
-    bbox_style = lambda color: dict(facecolor = 'white', alpha = 1, edgecolor = color, boxstyle = 'round,pad=.1')
-    
-    # Define time labels 
-    time_labels = [
-        {
-            "omega_over_m": omega_over_m_dt, 
-            "color": "tab:red", 
-            "txt": r'$\delta t\, \gtrsim \, 1~{\rm yr}~ \uparrow $' # dt >~ 1 year
-            },
-        {
-            "omega_over_m": omega_over_m_day, 
-            "color": "tab:purple", 
-            "txt": r'$\delta t\, \gtrsim \, 1~{\rm day}~ \uparrow$' # dt >~ 1 day
-            }
-    ]
+def label_d_from_delta_t(ax, m, q, time, color, coupling_order):
+    bbox_style = dict(facecolor = 'white', 
+                      alpha = 1, 
+                      edgecolor = color, 
+                      boxstyle = 'round,pad=.1')
     
     # Define y positions of text box based on coupling_order
-    pos_y_coupling = {
+    pos_y = {
         "linear": 1e-7,
         "quad": 1e16
-    }
+    }[coupling_order]
     
-    # Label regions in parameter space for each time label
-    for label in time_labels:
-        pos_x = m*label["omega_over_m"]/4
-        pos_y = pos_y_coupling[coupling_order]
-        txt = label["txt"]
-        ax.text(pos_x, pos_y, txt, rotation = 90, fontsize = 25, color = label["color"], bbox = bbox_style(label["color"]))
+    if time == YEAR_TO_SEC:
+        label = r'$\delta t\, \gtrsim \, 1~{\rm yr}~ \uparrow $'
+    elif time == DAY_TO_SEC:
+        label = r'$\delta t\, \gtrsim \, 1~{\rm day}~ \uparrow $'
+    else:
+        raise ValueError('Time input should be 1 year or 1 day in seconds.')
+
+    ax.text(m*q/4, pos_y, label, rotation = 90, fontsize = 25, color = color, bbox = bbox_style)
     
 def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
     """ Shade in the viable parameter space """
