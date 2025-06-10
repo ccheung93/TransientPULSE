@@ -68,36 +68,25 @@ def plot_FifthForce(ax, range_x, fifthForce_m):
     """ Plot fifth-force limits """
     ax.plot(range_x, fifthForce_m)
 
-def plot_d_from_delta_t(ax, range_x, dday, dyear):
+def plot_coupling_from_time_delay(ax, range_x, dday, dyear):
     """ Plot the detection delays of 1 day and 1 year relative to a light-speed signal """
     ax.plot(range_x, dday, color ='tab:purple', linewidth = 2, linestyle = '--'  )
     ax.plot(range_x, dyear, color = 'tab:red', linewidth = 2, linestyle = '--'  )
     
-def plot_fill_d_from_delta_t(ax, range_x, ddt_day1, ddt_day30, dyear1, dyear30):
+def plot_fill_coupling_from_time_delay(ax, range_x, dday1, dday30, dyear1, dyear30):
     """ Fill in region between dilatonic coupling curves"""
-    ax.fill_between(range_x, ddt_day1, ddt_day30, color = 'tab:purple', alpha = 0.1)
+    ax.fill_between(range_x, dday1, dday30, color = 'tab:purple', alpha = 0.1)
     ax.fill_between(range_x, dyear1, dyear30, color = 'tab:red', alpha = 0.1)
 
-def label_d_from_delta_t(ax, m, q, time, color, coupling_order):
+def label_coupling_from_time_delay(ax, pos_x, pos_y, time, color, rotation=90):
     bbox_style = dict(facecolor = 'white', 
                       alpha = 1, 
                       edgecolor = color, 
                       boxstyle = 'round,pad=.1')
     
-    # Define y positions of text box based on coupling_order
-    pos_y = {
-        "linear": 1e-7,
-        "quad": 1e16
-    }[coupling_order]
-    
-    if time == YEAR_TO_SEC:
-        label = r'$\delta t\, \gtrsim \, 1~{\rm yr}~ \uparrow $'
-    elif time == DAY_TO_SEC:
-        label = r'$\delta t\, \gtrsim \, 1~{\rm day}~ \uparrow $'
-    else:
-        raise ValueError('Time input should be 1 year or 1 day in seconds.')
+    label = rf'$\delta t\, \gtrsim \, 1~{{\rm {time}}}~\uparrow$'
 
-    ax.text(m*q/4, pos_y, label, rotation = 90, fontsize = 25, color = color, bbox = bbox_style)
+    ax.text(pos_x, pos_y, label, rotation = rotation, fontsize = 25, color = color, bbox = bbox_style)
     
 def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
     """ Shade in the viable parameter space """

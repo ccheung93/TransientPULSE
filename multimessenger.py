@@ -44,9 +44,9 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, ddt, qyear, qday, Microsc
     fillregion_y = [Microscope_m[l] for l in range(len(fillregion_x))]
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
 
-    plot_d_from_delta_t(ax, Elist, dday, ddt)
-    label_d_from_delta_t(ax, m, qday, DAY_TO_SEC, 'tab:purple', 'linear')
-    label_d_from_delta_t(ax, m, qyear, YEAR_TO_SEC, 'tab:red', 'linear')
+    plot_coupling_from_time_delay(ax, Elist, dday, ddt)
+    label_coupling_from_time_delay(ax, m*qday/4, 1e-7, 'day', 'tab:purple')
+    label_coupling_from_time_delay(ax, m*qyear/4, 1e-7, 'yr', 'tab:red')
     
     label_uncertainty_exclusion(ax, E_unc=E_unc, R=R)
     plot_parameter_list(ax, i, j, coupling_type, 'linear', filename)
@@ -60,7 +60,7 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_mass_exclusion(ax, m, 'quad')
     label_mass_exclusion(ax, m, 'quad')
     
-    plot_d_from_delta_t(ax, Elist, dday30, dyear30)
+    plot_coupling_from_time_delay(ax, Elist, dday30, dyear30)
     
     condition_mask = Elist > E_unc
     fillregion_x = Elist[condition_mask]
@@ -76,29 +76,25 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
         dday30_fill = dday30[condition_mask]
         fillregion_y = np.minimum(d_exp, dday30_fill)
         
-        dt_lbl_yr = r'$\delta t\, \gtrsim \, 1~{\rm yr}~\uparrow$'
-        dt_lbl_day = r'$\delta t\, \gtrsim \, 1~{\rm day}~\uparrow$'
-        color_yr = 'tab:red'
-        color_day = 'tab:purple'
         if coupling_type == 'photon':
-            add_boxed_label(ax, 3e-17, 1e27, dt_lbl_yr, rotation=37, color=color_yr, edgecolor=color_yr)
-            add_boxed_label(ax, 6e-16, 9e26, dt_lbl_day, rotation=37, color=color_day, edgecolor=color_day)
+            label_coupling_from_time_delay(ax, 6e-16, 9e26, 'day', 'tab:purple', rotation=37)
+            label_coupling_from_time_delay(ax, 3e-17, 1e27, 'yr', 'tab:red', rotation=37)
         elif coupling_type == 'electron':
-            add_boxed_label(ax, 3e-17, 8.5e26, dt_lbl_yr, rotation=39, color=color_yr, edgecolor=color_yr)
-            add_boxed_label(ax, 6e-16, 8e26, dt_lbl_day, rotation=39, color=color_day, edgecolor=color_day)
+            label_coupling_from_time_delay(ax, 6e-16, 8e26, 'day', 'tab:purple', rotation=39)
+            label_coupling_from_time_delay(ax, 3e-17, 8.5e26, 'yr', 'tab:red', rotation=39)
         elif coupling_type == 'gluon':
             ax.set_ylim(.5e5,8e30)
-            add_boxed_label(ax, 3e-17, 6e23, dt_lbl_yr, rotation=38, color=color_yr, edgecolor=color_yr)
-            add_boxed_label(ax, 6e-16, 5e23, dt_lbl_day, rotation=38, color=color_day, edgecolor=color_day)
+            label_coupling_from_time_delay(ax, 6e-16, 5e23, 'day', 'tab:purple', rotation=38)
+            label_coupling_from_time_delay(ax, 3e-17, 6e23, 'yr', 'tab:red', rotation=38)
     else:
-        plot_d_from_delta_t(ax, Elist, dday1, dyear1)
-    
+        plot_coupling_from_time_delay(ax, Elist, dday1, dyear1)
+
         dday_fill = dday1[condition_mask]
         fillregion_y = np.minimum(d_exp, dday_fill)
         
-        plot_fill_d_from_delta_t(ax, Elist, dday1, dday30, dyear1, dyear30)
-        label_d_from_delta_t(ax, m, qday, DAY_TO_SEC, 'tab:purple', 'quad')
-        label_d_from_delta_t(ax, m, qyear, YEAR_TO_SEC, 'tab:red', 'quad')
+        plot_fill_coupling_from_time_delay(ax, Elist, dday1, dday30, dyear1, dyear30)
+        label_coupling_from_time_delay(ax, m*qday/4, 1e16, 'day', 'tab:purple')
+        label_coupling_from_time_delay(ax, m*qyear/4, 1e16, 'yr', 'tab:red')
         
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
     plot_parameter_list(ax, i, j, coupling_type, 'quad', filename)
