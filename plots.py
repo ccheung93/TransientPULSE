@@ -177,6 +177,36 @@ def label_mass_exclusion(ax, m, coupling_order):
                       boxstyle = 'round,pad=.1')
     ax.text(pos_x, pos_y[coupling_order], txt, color = 'k', bbox = bbox_style)
 
+def plot_supernova(ax, Elist, constraint, coupling_type):
+    if coupling_type not in ['photon', 'electron', 'gluon']:
+        raise ValueError(f"{coupling_type} is not a valid coupling type for plot_supernova.")
+    
+    config = {
+        "photon": {
+            "ylim": (.5e6, 8e32),
+            "lbl_y": 3e31,
+            "txt": r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
+        },
+        "electron": {
+            "ylim": (.5e9, 5e33),
+            "lbl_y": 1e32,
+            "txt": r'${\rm Supernova}~e^+ e^- \rightarrow \phi \phi$',
+        },
+        "gluon": {
+            "ylim": (.5e4, 5e30),
+            "lbl_y": 3e29,
+            "txt": r'${\rm Supernova}~N N \rightarrow N N \phi \phi$',
+        }
+    }[coupling_type]
+    
+    lbl_x = 1e-19
+    
+    constraint = np.ones_like(Elist)*constraint
+    ax.set_ylim(*config["ylim"])
+    ax.text(lbl_x, config["lbl_y"], config["txt"], fontsize = 30, color = 'black')
+    ax.plot(Elist, constraint, color = 'gray', linewidth = 3)
+    ax.fill_between(Elist, constraint, 1e100, color = 'gray', alpha = 0.1)
+        
 def label_critical_screening(ax, K_E, K_atm, coupling_type, filename):
     """ Label critical screening lines """
     distance_scales = ["10Mpc_", "10kpc_"]

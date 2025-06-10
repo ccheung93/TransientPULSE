@@ -28,37 +28,6 @@ def get_distance_label(R):
     
     return distance_label
 
-def plot_supernova(ax, Elist, coupling_type):
-    supernova_config = {
-        "photon": {
-            "ylim": (.5e6, 8e32),
-            "lbl_y": 3e31,
-            "txt": r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
-            "line": [coupling_conversion(1e12, coupling_order=2)] * len(Elist)
-        },
-        "electron": {
-            "ylim": (.5e9, 5e33),
-            "lbl_y": 1e32,
-            "txt": r'${\rm Supernova}~e^+ e^- \rightarrow \phi \phi$',
-            "line": [5e31] * len(Elist)
-        },
-        "gluon": {
-            "ylim": (.5e4, 5e30),
-            "lbl_y": 3e29,
-            "txt": r'${\rm Supernova}~N N \rightarrow N N \phi \phi$',
-            "line": [coupling_conversion(15e12, coupling_order=2)] * len(Elist)
-        }
-    }
-    
-    lbl_x = 1e-19
-    
-    if coupling_type in supernova_config:
-        config = supernova_config[coupling_type]
-        ax.set_ylim(*config["ylim"])
-        ax.text(lbl_x, config["lbl_y"], config["txt"], fontsize = 30, color = 'black')
-        ax.plot(Elist, config["line"], color = 'gray', linewidth = 3)
-        ax.fill_between(Elist, config["line"], 1e100, color = 'gray', alpha = 0.1)
-
 def linear_plot(ax, i, j, coupling, m, Elist, R, dday, ddt, qyear, qday, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename):
     """ Plots for linear coupling_order """
 
@@ -82,7 +51,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, ddt, qyear, qday, Microsc
     label_uncertainty_exclusion(ax, E_unc=E_unc, R=R)
     plot_parameter_list(ax, i, j, coupling_type, 'linear', filename)
 
-def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, filename):
+def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, coupling_order, filename):
     """ Plots for quadratic coupling_order """
     
     plot_crit_couplings(ax, Elist, d_screen_earth, d_screen_exp, d_screen_atm)
@@ -98,7 +67,8 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     coupling_fill = coupling[condition_mask]
     d_exp = d_screen_exp[condition_mask]
     
-    plot_supernova(ax, Elist, coupling_type)
+    constraint = coupling_conversion(coupling_type=coupling_type, coupling_order=coupling_order)
+    plot_supernova(ax, Elist, constraint, coupling_type)
     label_uncertainty_exclusion(ax, coupling_type=coupling_type)
     label_critical_screening(ax, K_E, K_atm, coupling_type, filename)
     
@@ -220,7 +190,7 @@ def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=Tru
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
-                quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, filename)
+                quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, coupling_order, filename)
 
             # Subplot axis labels
             ax[0,j].set_title(r'$\log_{10}(m_{\phi}/{\rm eV}) = $'+str(int(np.log10(mass[0][j]))), pad = 20)
