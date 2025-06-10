@@ -43,6 +43,7 @@ G_DM_BENCHMARKS = {
     'EDM': 1e-18         # 1/GeV^2
 }
 
+# Astrophysical constraint benchmarks in the convention of Eq. 5 in arXiv:2502.08716v1
 ASTROPHYSICAL_CONSTRAINT_BENCHMARKS = {
     'electron': 1e-13,
     'photon': 5e-13,
@@ -325,7 +326,7 @@ def convert_coupling_order_str_to_int(coupling_order):
         else:
             raise ValueError(f"{coupling_order} is not a valid coupling order.")
 
-def coupling_conversion(Lambda, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
+def coupling_conversion(Lambda=None, coupling_order=None, coupling_type=None, constraint=None, multiplier=None, axion=False):
     """ Converts between other common normalization conventions 
         For scalars: from energy scale (Lambda) to dilatonic coupling
         For axions: from different normalization conventions for astrophysical bounds or lab bounds
@@ -345,8 +346,23 @@ def coupling_conversion(Lambda, coupling_order=None, coupling_type=None, constra
         constraint = constraint if constraint else ASTROPHYSICAL_CONSTRAINT_BENCHMARKS[coupling_type]
         multiplier = multiplier if multiplier else DEFAULT_NORMALIZATION_MULTIPLIER[coupling_type]
         return constraint * multiplier
-    else:
+    elif Lambda:
+        if not isinstance(coupling_order, int): 
+            coupling_order = convert_coupling_order_str_to_int(coupling_order)
         return ((1/np.sqrt(4*PI))*(PLANCK_MASS_EV/Lambda))**coupling_order
+    else:
+        if coupling_type == 'electron':
+            return 5e31
+        elif coupling_type in ['photon', 'gluon']:
+            default_conversions = {
+                'photon': 1e12, # 1 TeV
+                'gluon': 15e12  # 15 TeV
+            }
+            if not isinstance(coupling_order, int): 
+                coupling_order = convert_coupling_order_str_to_int(coupling_order)
+            return ((1/np.sqrt(4*PI))*(PLANCK_MASS_EV/default_conversions[coupling_type]))**coupling_order
+        else:
+            return KeyError(f"{coupling_type} is not a valid coupling type for coupling_conversion.")
 
 def q_from_time_delay(dt, R):
     """ Calculate q from a time delay (Eq. 36), assuming constant beta
