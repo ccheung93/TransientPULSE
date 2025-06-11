@@ -105,9 +105,9 @@ def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
     """ Shade in the viable parameter space """
     ax.fill_between(fillregion_x, coupling, fillregion_y, where = coupling < fillregion_y, color = 'tab:green', alpha = 0.3)
 
-def plot_coupling(ax, m_bench, coupling, wmp_contour):
+def plot_coupling(ax, Elist, coupling):
     """ Plot the projected sensitivity of future experiments """
-    ax.plot(m_bench*wmp_contour, coupling, c = 'k', linewidth = 2, alpha = 1)
+    ax.plot(Elist, coupling, c = 'k', linewidth = 2, alpha = 1)
     
 def plot_crit_couplings(ax, range_x, d_earth, d_exp, d_atm):
     """ Plot the critical screening from the Earth, atmosphere, and experimental apparatus """

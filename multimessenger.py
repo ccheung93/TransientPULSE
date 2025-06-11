@@ -28,13 +28,13 @@ def get_distance_label(R):
     
     return distance_label
 
-def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename):
+def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename):
     """ Plots for linear coupling_order """
 
     plot_MICROSCOPE(ax, Elist, Microscope_m)
     plot_E_unc(ax, E_unc)
     plot_FifthForce(ax, Elist, FifthForce_m)
-    plot_coupling(ax, m_bench, coupling, wmp_contour)
+    plot_coupling(ax, Elist, coupling)
     plot_mass_exclusion(ax, m, 'linear')
     label_mass_exclusion(ax, m, 'linear')
     
@@ -51,12 +51,12 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     label_uncertainty_exclusion(ax, E_unc=E_unc, R=R)
     plot_parameter_list(ax, i, j, coupling_type, 'linear', filename)
 
-def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, coupling_order, filename):
+def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename):
     """ Plots for quadratic coupling_order """
     
     plot_crit_couplings(ax, Elist, d_screen_earth, d_screen_exp, d_screen_atm)
     plot_E_unc(ax, E_unc)
-    plot_coupling(ax, m_bench, coupling, wmp_contour)
+    plot_coupling(ax, Elist, coupling)
     plot_mass_exclusion(ax, m, 'quad')
     label_mass_exclusion(ax, m, 'quad')
     
@@ -171,7 +171,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
-                linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, qyear, qday, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename)
+                linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename)
                 
             elif coupling_order == 'quad':
                 d_screen_earth = coupling_critical(Elist, R_E, RHO_E, m, K_E)
@@ -184,7 +184,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
-                quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, m_bench, wmp_contour, K_E, K_atm, coupling_type, coupling_order, filename)
+                quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename)
 
             # Subplot axis labels
             ax[0,j].set_title(r'$\log_{10}(m_{\phi}/{\rm eV}) = $'+str(int(np.log10(mass[0][j]))), pad = 20)
