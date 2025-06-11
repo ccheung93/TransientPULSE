@@ -157,7 +157,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
         for j in range(2):
             t = ts[i][j]
             m = mass[i][j]
-            E_unc = E_from_uncert(t)
+            E_unc = E_from_uncert(t*SEC_TO_INEV)
             axij = ax[i][j]
             
             setup_axes(axij, formatter, coupling_order)
@@ -193,7 +193,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
 
     setup_axis_labels(fig, coupling_order, coupling_type)
     
-    if save_plots: plt.savefig(filename,dpi = 1500)
+    if save_plots: plt.savefig(filename, dpi = 300)
     if show_plots: plt.show()
     
     

@@ -451,9 +451,9 @@ def E_from_uncert(burst_duration):
     """ Calculate the energy from the burst duration using the Heisenberg uncertainty relation 
     
     Args: 
-        burst_duration (float): t_star, the duration of the burst emission at the source [s]
+        burst_duration (float): t_star, the duration of the burst emission at the source [1/eV]
     
     Returns:
         float: energy [eV]
     """
-    return 2*PI/(burst_duration*SEC_TO_INEV)
+    return 2*PI/burst_duration
