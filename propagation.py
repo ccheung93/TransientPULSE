@@ -253,11 +253,16 @@ def calc_timing_rescaling_factor(signal_duration, tau_star, tau_DM, t_int=DAY_TO
     integration_time_DM_s = t_int_DM if t_int_DM else YEAR_TO_SEC
     t_int_DM = np.full_like(signal_duration, integration_time_DM_s * SEC_TO_INEV)
     
-    timing_rescaling_factor = [
-        (t_dm**(1/4)) * min(tau_dm**(1/4), t_dm**(1/4)) /
-        (min(sig_dur**(1/4), t_i**(1/4)) * min(tau_s**(1/4), t_i**(1/4)))
-        for t_dm, tau_dm, sig_dur, t_i, tau_s in zip(t_int_DM, tau_DM, signal_duration, t_int, tau_star)
-    ]
+    t_int_14 = t_int**(1/4)
+    t_int_DM_14 = t_int_DM**(1/4)
+    sig_dur_14 = signal_duration**(1/4)
+    tau_star_14 = tau_star**(1/4)
+    tau_DM_14 = tau_DM**(1/4)
+    
+    timing_rescaling_factor = (
+        t_int_DM_14 * np.minimum(tau_DM_14, t_int_DM_14) /
+        (np.minimum(sig_dur_14, t_int_14) * np.minimum(tau_star_14, t_int_14))
+    )
     
     return timing_rescaling_factor
 
