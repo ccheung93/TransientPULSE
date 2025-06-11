@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib.ticker import FuncFormatter
 
 COUPLING_LABELS = {
     'linear': {
@@ -20,14 +21,22 @@ COUPLING_LABELS = {
     }
 }
 
-def setup_axes(ax, formatter, coupling_order):
+def exponentlabel(x, pos):
+    return str("{:.0f}".format(np.log10(x)))
+
+def setup_axes(ax, xlims, ylims):
     """ Set up axes for subplot (i, j) """
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    
+    formatter = FuncFormatter(exponentlabel) 
     ax.xaxis.set_major_formatter(formatter)
     ax.yaxis.set_major_formatter(formatter)
+    
     ax.set_xticks(np.logspace(-20,-6,7))
-    ax.set_xlim(.3e-20,0.9e-6)
-    if coupling_order == 'linear': 
-        ax.set_ylim(1e-9,0.9e0)
+    ax.set_xlim(*xlims)
+    ax.set_ylim(*ylims)
+    
     ax.tick_params(direction="in")
     
 def setup_axis_labels(fig, coupling_order, coupling_type):

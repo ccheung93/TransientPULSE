@@ -1,14 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 import time
 
 from propagation import *
 from limits import *
 from plots import *
-
-def exponentlabel(x, pos):
-    return str("{:.0f}".format(np.log10(x)))
 
 def get_distance_label(R):
     """ Returns distance scale label for a given value in parsecs 
@@ -83,7 +79,6 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
             label_coupling_from_time_delay(ax, 6e-16, 8e26, 'day', 'tab:purple', rotation=39)
             label_coupling_from_time_delay(ax, 3e-17, 8.5e26, 'yr', 'tab:red', rotation=39)
         elif coupling_type == 'gluon':
-            ax.set_ylim(.5e5,8e30)
             label_coupling_from_time_delay(ax, 6e-16, 5e23, 'day', 'tab:purple', rotation=38)
             label_coupling_from_time_delay(ax, 3e-17, 6e23, 'yr', 'tab:red', rotation=38)
     else:
@@ -147,20 +142,12 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
     })
     plt.subplots_adjust(wspace = 0, hspace = 0)
 
-    ax[0,0].set_yscale('log')
-    ax[0,0].set_xscale('log')
-    
-    # Set tick labels on axes to be in log10
-    formatter = FuncFormatter(exponentlabel) 
-
     for i in range(2):
         for j in range(2):
             t = ts[i][j]
             m = mass[i][j]
             E_unc = E_from_uncert(t*SEC_TO_INEV)
             axij = ax[i][j]
-            
-            setup_axes(axij, formatter, coupling_order)
             
             coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int=YEAR_TO_SEC, t_int_DM=1e6, coupling_order=coupling_order)
             
@@ -171,6 +158,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
+                setup_axes(axij, xlims=(.3e-20, 0.9e-6), ylims=(1e-9, 0.9))
                 linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename)
                 
             elif coupling_order == 'quad':
@@ -184,6 +172,12 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
                 dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
+                ylims = {
+                    'photon': (.5e6, 8e32),
+                    'electron': (.5e9, 5e33),
+                    'gluon': (.5e5, 8e30)
+                }[coupling_type]
+                setup_axes(axij, xlims=(.3e-20, 0.9e-6), ylims=ylims)
                 quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename)
 
             # Subplot axis labels
