@@ -28,7 +28,7 @@ def get_distance_label(R):
     
     return distance_label
 
-def linear_plot(ax, i, j, coupling, m, Elist, R, dday, ddt, qyear, qday, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename):
+def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, m_bench, wmp_contour, coupling_type, filename):
     """ Plots for linear coupling_order """
 
     plot_MICROSCOPE(ax, Elist, Microscope_m)
@@ -44,7 +44,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, ddt, qyear, qday, Microsc
     fillregion_y = [Microscope_m[l] for l in range(len(fillregion_x))]
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
 
-    plot_coupling_from_time_delay(ax, Elist, dday, ddt)
+    plot_coupling_from_time_delay(ax, Elist, dday, dyear)
     label_coupling_from_time_delay(ax, m*qday/4, 1e-7, 'day', 'tab:purple')
     label_coupling_from_time_delay(ax, m*qyear/4, 1e-7, 'yr', 'tab:red')
     
@@ -99,13 +99,12 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
     plot_parameter_list(ax, i, j, coupling_type, 'quad', filename)
 
-def plots(R, Etot, coupling_type, coupling_order, dt=YEAR_TO_SEC, save_plots=True, show_plots=True):
+def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=True):
     """Generate dilatonic coupling plots 
 
     Args:
         R (float): distance between the source and the experiment
         Etot (float): total energy of the burst [M_sun]
-        dt (float): time delay [s], default = 1 year
         coupling_type (str): type of coupling ('photon', 'electron' or 'gluon')
         coupling_order (str): coupling order ('linear' or 'quadratic')
     """

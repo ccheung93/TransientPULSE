@@ -1,5 +1,4 @@
 import numpy as np
-from propagation import DAY_TO_SEC, YEAR_TO_SEC
 
 COUPLING_LABELS = {
     'linear': {
