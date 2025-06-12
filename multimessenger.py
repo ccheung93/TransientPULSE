@@ -34,7 +34,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     plot_mass_exclusion(ax, m)
     if m > 1e-20:
         pos_x, pos_y = m/200, 1e-7
-        label_mass_exclusion(ax, pos_x, pos_y)
+        label_mass_exclusion(ax, pos_x, pos_y, facecolor='whitesmoke')
     
     condition_mask = (Elist > E_unc) & (Elist > m * qday)
     fillregion_x = Elist[condition_mask]
@@ -59,7 +59,7 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_mass_exclusion(ax, m)
     if m > 1e-20:
         pos_x, pos_y = m/200, 1e12
-        label_mass_exclusion(ax, pos_x, pos_y)
+        label_mass_exclusion(ax, pos_x, pos_y, facecolor='whitesmoke')
 
     plot_coupling_from_time_delay(ax, Elist, dday30, 'tab:purple')
     plot_coupling_from_time_delay(ax, Elist, dyear30, 'tab:red')

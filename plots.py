@@ -169,10 +169,17 @@ def plot_mass_exclusion(ax, m, alpha=1):
     ax.axvline(m, c = 'k', linestyle = '--')
     ax.axvspan(1e-100, m, facecolor = 'none', hatch = '/', edgecolor = 'k', alpha = alpha)
     
-def label_mass_exclusion(ax, pos_x, pos_y):
+def label_mass_exclusion(ax, pos_x=None, pos_y=None, fontsize=35, color='black', facecolor='white'):
     """ Label region in parameter space where omega < scalar field mass """
     txt = r'$\omega<m_{\phi}$'
-    add_boxed_label(ax, pos_x, pos_y, txt, fontsize=35, facecolor='whitesmoke')
+    if pos_x is None:
+        xmin, xmax = ax.get_xlim()
+        pos_x = xmin * 3
+    if pos_y is None:
+        ymin, ymax = ax.get_ylim()
+        pos_y = (ymin + ymax) / 2
+    
+    add_boxed_label(ax, pos_x, pos_y, txt, fontsize=fontsize, color=color, facecolor=facecolor)
 
 def plot_supernova(ax, Elist, constraint, coupling_type, x_label=None, y_label=None):
     if coupling_type not in ['photon', 'electron', 'gluon']:
