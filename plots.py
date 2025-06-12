@@ -95,10 +95,9 @@ def plot_FifthForce(ax, range_x, fifthForce_m):
     """ Plot fifth-force limits """
     ax.plot(range_x, fifthForce_m)
 
-def plot_coupling_from_time_delay(ax, range_x, dday, dyear):
+def plot_coupling_from_time_delay(ax, range_x, coupling, color):
     """ Plot the detection delays of 1 day and 1 year relative to a light-speed signal """
-    ax.plot(range_x, dday, color ='tab:purple', linewidth = 2, linestyle = '--'  )
-    ax.plot(range_x, dyear, color = 'tab:red', linewidth = 2, linestyle = '--'  )
+    ax.plot(range_x, coupling, color = color, linewidth = 2, linestyle = '--'  )
     
 def plot_fill_coupling_from_time_delay(ax, range_x, dday1, dday30, dyear1, dyear30):
     """ Fill in region between dilatonic coupling curves"""

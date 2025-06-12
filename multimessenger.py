@@ -40,7 +40,8 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     fillregion_y = [Microscope_m[l] for l in range(len(fillregion_x))]
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
 
-    plot_coupling_from_time_delay(ax, Elist, dday, dyear)
+    plot_coupling_from_time_delay(ax, Elist, dday, 'tab:purple')
+    plot_coupling_from_time_delay(ax, Elist, dyear, 'tab:red')
     label_coupling_from_time_delay(ax, m*qday/4, 1e-7, 'day', 'tab:purple')
     label_coupling_from_time_delay(ax, m*qyear/4, 1e-7, 'yr', 'tab:red')
     
@@ -55,9 +56,9 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_coupling(ax, Elist, coupling)
     plot_mass_exclusion(ax, m, 'quad')
     label_mass_exclusion(ax, m, 'quad')
-    
-    plot_coupling_from_time_delay(ax, Elist, dday30, dyear30)
-    
+
+    plot_coupling_from_time_delay(ax, Elist, dday30, 'tab:purple')
+    plot_coupling_from_time_delay(ax, Elist, dyear30, 'tab:red')
     condition_mask = Elist > E_unc
     fillregion_x = Elist[condition_mask]
     coupling_fill = coupling[condition_mask]
@@ -82,7 +83,8 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
             label_coupling_from_time_delay(ax, 6e-16, 5e23, 'day', 'tab:purple', rotation=38)
             label_coupling_from_time_delay(ax, 3e-17, 6e23, 'yr', 'tab:red', rotation=38)
     else:
-        plot_coupling_from_time_delay(ax, Elist, dday1, dyear1)
+        plot_coupling_from_time_delay(ax, Elist, dday1, 'tab:purple')
+        plot_coupling_from_time_delay(ax, Elist, dyear1, 'tab:red')
 
         dday_fill = dday1[condition_mask]
         fillregion_y = np.minimum(d_exp, dday_fill)
