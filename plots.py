@@ -138,14 +138,18 @@ def plot_crit_couplings(ax, range_x, d_earth, d_exp, d_atm):
     # Shade in the region above the critical coupling at Earth
     ax.fill_between(range_x, d_earth, 1e100, color = 'tab:blue', alpha = .05)
 
-def plot_E_unc(ax, E_unc):
+def plot_E_unc(ax, E_unc, pos_x=None, pos_y=None, fontsize=35, color='chocolate', label_color='tab:brown'):
     """ Plot the scalar energy calculated from the uncertainty principle"""
-    ax.axvline(E_unc, color = 'chocolate', linestyle = '--')
+    ax.axvline(E_unc, color = color, linestyle = '--')
     
     # Shade in the region up to E_unc
-    ax.axvspan(1e-100, E_unc, color = 'chocolate', alpha = 0.1)
-
-def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=30, color='black'):
+    ax.axvspan(1e-100, E_unc, color = color, alpha = 0.1)
+    
+    # Label E_unc
+    if pos_x and pos_y:
+        add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize = fontsize, color = label_color) 
+    
+def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=35, color='black'):
     """ Plot the astrophysical constraint"""
     ax.axhline(constraint, color = 'gray', linewidth = 3)
     
@@ -159,26 +163,6 @@ def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fonts
     if pos_y is None:
         pos_y = constraint * 1.25
     ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize = fontsize, color = color)  
-
-def label_uncertainty_exclusion(ax, E_unc=None, R=None, coupling_type=None):
-    """ Label region in parameter space that is excluded due to the uncertainty principle """
-    if E_unc is not None and R is not None:
-        if R < 1e5:
-            pos_x, pos_y = 1e-20, 1e-2
-        else:
-            pos_x, pos_y = E_unc/200, 1e-1
-    elif coupling_type is not None:
-        pos_x = 1e-19
-        pos_y = {
-            'photon': 3e29,
-            'electron': 3e29,
-            'gluon': 3e26
-        }[coupling_type]
-    else:
-        raise ValueError('Must provide either (E_unc and R) or coupling_type.')
-    
-    label = r'$\omega\,t_{*} \lesssim \, 2\pi$'
-    add_boxed_label(ax, pos_x, pos_y, label, fontsize = 35, color = 'tab:brown')
 
 def plot_mass_exclusion(ax, m, alpha=1):
     """ Plot region excluded due to the scalar energy being less than its mass """

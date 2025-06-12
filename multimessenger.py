@@ -26,9 +26,12 @@ def get_distance_label(R):
 
 def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename):
     """ Plots for linear coupling_order """
-
+    if R < 1e5:
+        plot_E_unc(ax, E_unc, 1e-20, 1e-2)
+    else:
+        plot_E_unc(ax, E_unc, E_unc/200, 1e-1)
+    
     plot_MICROSCOPE(ax, Elist, Microscope_m)
-    plot_E_unc(ax, E_unc)
     plot_FifthForce(ax, Elist, FifthForce_m)
     plot_coupling(ax, Elist, coupling)
     plot_mass_exclusion(ax, m)
@@ -47,20 +50,23 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     label_coupling_from_time_delay(ax, m*qday/4, 1e-7, 'day', 'tab:purple')
     label_coupling_from_time_delay(ax, m*qyear/4, 1e-7, 'yr', 'tab:red')
     
-    label_uncertainty_exclusion(ax, E_unc=E_unc, R=R)
     plot_parameter_list(ax, i, j, coupling_type, 'linear', filename)
 
 def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename):
     """ Plots for quadratic coupling_order """
-    
-    plot_crit_couplings(ax, Elist, d_screen_earth, d_screen_exp, d_screen_atm)
-    plot_E_unc(ax, E_unc)
-    plot_coupling(ax, Elist, coupling)
-    plot_mass_exclusion(ax, m)
+    y_label = {
+        'photon': 3e29,
+        'electron': 3e29,
+        'gluon': 3e26
+    }[coupling_type]
+    plot_E_unc(ax, E_unc, 1e-19, y_label)
     if m > 1e-20:
-        pos_x, pos_y = m/200, 1e12
-        label_mass_exclusion(ax, pos_x, pos_y, facecolor='whitesmoke')
-
+        plot_mass_exclusion(ax, m)
+        label_mass_exclusion(ax, m/200, 1e12, facecolor='whitesmoke')
+        
+    plot_coupling(ax, Elist, coupling)
+    plot_crit_couplings(ax, Elist, d_screen_earth, d_screen_exp, d_screen_atm)
+    label_critical_screening(ax, K_E, K_atm, coupling_type, filename)
     plot_coupling_from_time_delay(ax, Elist, dday30, 'tab:purple')
     plot_coupling_from_time_delay(ax, Elist, dyear30, 'tab:red')
     condition_mask = Elist > E_unc
@@ -70,8 +76,6 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     
     constraint = coupling_conversion(coupling_type=coupling_type, coupling_order=coupling_order)
     plot_supernova(ax, Elist, constraint, coupling_type)
-    label_uncertainty_exclusion(ax, coupling_type=coupling_type)
-    label_critical_screening(ax, K_E, K_atm, coupling_type, filename)
     
     if R < 1e5:
         dday30_fill = dday30[condition_mask]
