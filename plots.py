@@ -109,15 +109,15 @@ def plot_fill_coupling_from_time_delay(ax, range_x, dday1, dday30, dyear1, dyear
     ax.fill_between(range_x, dday1, dday30, color = 'tab:purple', alpha = 0.1)
     ax.fill_between(range_x, dyear1, dyear30, color = 'tab:red', alpha = 0.1)
 
-def label_coupling_from_time_delay(ax, pos_x, pos_y, time, color, rotation=90):
+def label_coupling_from_time_delay(ax, pos_x, pos_y, time_label, color, fontsize=25, rotation=90):
     bbox_style = dict(facecolor = 'white', 
                       alpha = 1, 
                       edgecolor = color, 
                       boxstyle = 'round,pad=.1')
     
-    label = rf'$\delta t\, \gtrsim \, 1~{{\rm {time}}}~\uparrow$'
+    label = rf'$\delta t\, \gtrsim \, 1~{{\rm {time_label}}}~\uparrow$'
 
-    ax.text(pos_x, pos_y, label, rotation = rotation, fontsize = 25, color = color, bbox = bbox_style)
+    ax.text(pos_x, pos_y, label, rotation = rotation, fontsize = fontsize, color = color, bbox = bbox_style)
     
 def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
     """ Shade in the viable parameter space """
