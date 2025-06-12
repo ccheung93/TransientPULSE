@@ -21,6 +21,14 @@ COUPLING_LABELS = {
     }
 }
 
+ALP_EXCLUSION_LABELS = {
+    'proton': r'${\rm SN1987A}$',
+    'electron': r'${\rm Red\ Giants\ (\omega Cen)}$',
+    'neutron': r'${\rm Neutron\ star\ cooling}$',
+    'photon': r'${\rm H1821+643}~\gamma \gamma \rightarrow \phi \phi$',
+    'EDM': r'${\rm Planck+BAO}$'
+}
+
 class Plot:
     def __init__(self, xlims, ylims):
         self.xlims = xlims
@@ -137,12 +145,20 @@ def plot_E_unc(ax, E_unc):
     # Shade in the region up to E_unc
     ax.axvspan(1e-100, E_unc, color = 'chocolate', alpha = 0.1)
 
-def plot_constraint(ax, constraint):
+def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=30, color='black'):
     """ Plot the astrophysical constraint"""
     ax.axhline(constraint, color = 'gray', linewidth = 3)
     
     # Shade in the region up to the constraint
     ax.axhspan(constraint, 1e100, color = 'gray', alpha = 0.1)
+    
+    # Label constraint
+    if pos_x is None:
+        xmin, xmax = ax.get_xlim()
+        pos_x = xmax / 2e5
+    if pos_y is None:
+        pos_y = constraint * 1.25
+    ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize = fontsize, color = color)  
 
 def label_uncertainty_exclusion(ax, E_unc=None, R=None, coupling_type=None):
     """ Label region in parameter space that is excluded due to the uncertainty principle """
