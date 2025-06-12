@@ -175,16 +175,10 @@ def label_uncertainty_exclusion(ax, E_unc=None, R=None, coupling_type=None):
     
     ax.text(pos_x, pos_y, label, color = 'tab:brown', bbox = bbox_style)
 
-def plot_mass_exclusion(ax, m, coupling_order):
+def plot_mass_exclusion(ax, m, alpha=1):
     """ Plot region excluded due to the scalar energy being less than its mass """
     ax.axvline(m, c = 'k', linestyle = '--')
-
-    # Shade in the region up to the mass constraint
-    if coupling_order == "linear":
-        min_y = 1e-50
-    elif coupling_order == "quad":
-        min_y = 1e-10 # NOTE - how is this decided?
-    ax.fill_between([1e-30, m], min_y, 1e50, facecolor = 'none', hatch = "/", edgecolor = 'k', alpha = 0.3)
+    ax.axvspan(1e-100, m, facecolor = 'none', hatch = '/', edgecolor = 'k', alpha = alpha)
     
 def label_mass_exclusion(ax, m, coupling_order):
     """ Label region in parameter space where omega < scalar field mass """

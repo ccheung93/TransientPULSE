@@ -31,7 +31,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     plot_E_unc(ax, E_unc)
     plot_FifthForce(ax, Elist, FifthForce_m)
     plot_coupling(ax, Elist, coupling)
-    plot_mass_exclusion(ax, m, 'linear')
+    plot_mass_exclusion(ax, m)
     label_mass_exclusion(ax, m, 'linear')
     
     condition_mask = (Elist > E_unc) & (Elist > m * qday)
@@ -54,7 +54,7 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_crit_couplings(ax, Elist, d_screen_earth, d_screen_exp, d_screen_atm)
     plot_E_unc(ax, E_unc)
     plot_coupling(ax, Elist, coupling)
-    plot_mass_exclusion(ax, m, 'quad')
+    plot_mass_exclusion(ax, m)
     label_mass_exclusion(ax, m, 'quad')
 
     plot_coupling_from_time_delay(ax, Elist, dday30, 'tab:purple')
