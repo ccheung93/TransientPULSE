@@ -182,10 +182,11 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
                 setup_axes(axij, xlims=(.3e-20, 0.9e-6), ylims=ylims)
                 quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename)
 
-            # Subplot axis labels
-            ax[0,j].set_title(r'$\log_{10}(m_{\phi}/{\rm eV}) = $'+str(int(np.log10(mass[0][j]))), pad = 20)
-            ax[i,1].set_ylabel(r'$t_*$ = '+str(int(ts[i][0]))+r' s',labelpad = 40,rotation = 270)
-            ax[i,1].yaxis.set_label_position("right")
+            # Figure title and subplot time labels
+            title = rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {int(np.log10(mass[0][j]))}$'
+            setup_title(ax[0,j], title, 20)
+            time_label = rf'$t_*$ = {int(ts[i][0])} s'
+            setup_time_label(ax[i,1], time_label, 40)
 
     setup_axis_labels(fig, coupling_order, coupling_type)
     

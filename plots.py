@@ -43,7 +43,7 @@ def setup_axes(ax, xlims, ylims):
     ax.set_ylim(*ylims)
     
     ax.tick_params(direction="in")
-    
+
 def setup_axis_labels(fig, coupling_order, coupling_type):
     shadowaxes = fig.add_subplot(111, xticks=[], yticks=[], frame_on=False)
     shadowaxes.set_ylabel(COUPLING_LABELS[coupling_order][coupling_type], fontsize = 45)
@@ -58,6 +58,13 @@ def setup_axis_labels_single(fig, coupling_order, coupling_type):
     shadowaxes.xaxis.labelpad=20
     shadowaxes.yaxis.labelpad=20
     
+def setup_title(ax, title, padding=10):
+    ax.set_title(title, pad = padding)
+
+def setup_time_label(ax, time_label, padding=20):
+    ax.set_ylabel(time_label, labelpad = padding, rotation = 270)
+    ax.yaxis.set_label_position("right")
+
 def add_boxed_label(ax, x, y, txt, rotation = 0, fontsize = 25, 
                     color = 'black', edgecolor = 'black', facecolor = 'white', 
                     alpha = 1 , boxstyle = 'round,pad=0.1'):
