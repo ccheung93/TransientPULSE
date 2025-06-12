@@ -21,6 +21,11 @@ COUPLING_LABELS = {
     }
 }
 
+class Plot:
+    def __init__(self, xlims, ylims):
+        self.xlims = xlims
+        self.ylims = ylims
+
 def exponentlabel(x, pos):
     return str("{:.0f}".format(np.log10(x)))
 
