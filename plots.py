@@ -136,9 +136,14 @@ def plot_E_unc(ax, E_unc):
     ax.axvline(E_unc, color = 'chocolate', linestyle = '--')
     
     # Shade in the region up to E_unc
-    ymin = 1e-50
-    ymax = 1e50
-    ax.fill_betweenx([ymin, ymax], x1=ymin, x2=E_unc, color = 'chocolate', alpha = 0.1)
+    ax.axvspan(1e-100, E_unc, color = 'chocolate', alpha = 0.1)
+
+def plot_constraint(ax, constraint):
+    """ Plot the astrophysical constraint"""
+    ax.axhline(constraint, color = 'gray', linewidth = 3)
+    
+    # Shade in the region up to the constraint
+    ax.axhspan(constraint, 1e100, color = 'gray', alpha = 0.1)
 
 def label_uncertainty_exclusion(ax, E_unc=None, R=None, coupling_type=None):
     """ Label region in parameter space that is excluded due to the uncertainty principle """
