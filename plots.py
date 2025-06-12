@@ -57,7 +57,7 @@ def setup_time_label(ax, time_label, padding = 20, fontsize = 35):
     ax.yaxis.set_label_position("right")
 
 def add_boxed_label(ax, x, y, txt, rotation = 0, fontsize = 25, 
-                    color = 'black', edgecolor = 'black', facecolor = 'white', 
+                    color = 'black', facecolor = 'white', 
                     alpha = 1 , boxstyle = 'round,pad=0.1'):
     """Adds a text box label at position (x, y)
     
@@ -78,7 +78,7 @@ def add_boxed_label(ax, x, y, txt, rotation = 0, fontsize = 25,
             color = color,
             bbox = dict(facecolor = facecolor,
                         alpha = alpha,
-                        edgecolor = edgecolor,
+                        edgecolor = color,
                         boxstyle = boxstyle
                         )
             )
@@ -110,14 +110,8 @@ def plot_fill_coupling_from_time_delay(ax, range_x, dday1, dday30, dyear1, dyear
     ax.fill_between(range_x, dyear1, dyear30, color = 'tab:red', alpha = 0.1)
 
 def label_coupling_from_time_delay(ax, pos_x, pos_y, time_label, color, fontsize=25, rotation=90):
-    bbox_style = dict(facecolor = 'white', 
-                      alpha = 1, 
-                      edgecolor = color, 
-                      boxstyle = 'round,pad=.1')
-    
     label = rf'$\delta t\, \gtrsim \, 1~{{\rm {time_label}}}~\uparrow$'
-
-    ax.text(pos_x, pos_y, label, rotation = rotation, fontsize = fontsize, color = color, bbox = bbox_style)
+    add_boxed_label(ax, pos_x, pos_y, label, rotation = rotation, fontsize = fontsize, color = color)
     
 def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
     """ Shade in the viable parameter space """
@@ -168,33 +162,17 @@ def label_uncertainty_exclusion(ax, E_unc=None, R=None, coupling_type=None):
         raise ValueError('Must provide either (E_unc and R) or coupling_type.')
     
     label = r'$\omega\,t_{*} \lesssim \, 2\pi$'
-    bbox_style = dict(facecolor='white', 
-                      alpha = 1, 
-                      edgecolor='chocolate', 
-                      boxstyle='round,pad=.1')
-    
-    ax.text(pos_x, pos_y, label, color = 'tab:brown', bbox = bbox_style)
+    add_boxed_label(ax, pos_x, pos_y, label, fontsize = 35, color = 'tab:brown')
 
 def plot_mass_exclusion(ax, m, alpha=1):
     """ Plot region excluded due to the scalar energy being less than its mass """
     ax.axvline(m, c = 'k', linestyle = '--')
     ax.axvspan(1e-100, m, facecolor = 'none', hatch = '/', edgecolor = 'k', alpha = alpha)
     
-def label_mass_exclusion(ax, m, coupling_order):
+def label_mass_exclusion(ax, pos_x, pos_y):
     """ Label region in parameter space where omega < scalar field mass """
-    if m <= 1e-20: return
-    
-    pos_x = m/200
-    pos_y = {
-        "linear": 1e-7,
-        "quad": 1e12
-    }
     txt = r'$\omega<m_{\phi}$'
-    bbox_style = dict(facecolor = 'whitesmoke',
-                      alpha = 1,
-                      edgecolor = 'k',
-                      boxstyle = 'round,pad=.1')
-    ax.text(pos_x, pos_y[coupling_order], txt, color = 'k', bbox = bbox_style)
+    add_boxed_label(ax, pos_x, pos_y, txt, fontsize=35, facecolor='whitesmoke')
 
 def plot_supernova(ax, Elist, constraint, coupling_type):
     if coupling_type not in ['photon', 'electron', 'gluon']:
