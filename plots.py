@@ -174,35 +174,26 @@ def label_mass_exclusion(ax, pos_x, pos_y):
     txt = r'$\omega<m_{\phi}$'
     add_boxed_label(ax, pos_x, pos_y, txt, fontsize=35, facecolor='whitesmoke')
 
-def plot_supernova(ax, Elist, constraint, coupling_type):
+def plot_supernova(ax, Elist, constraint, coupling_type, x_label=None, y_label=None):
     if coupling_type not in ['photon', 'electron', 'gluon']:
         raise ValueError(f"{coupling_type} is not a valid coupling type for plot_supernova.")
     
-    config = {
-        "photon": {
-            "ylim": (.5e6, 8e32),
-            "lbl_y": 3e31,
-            "txt": r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
-        },
-        "electron": {
-            "ylim": (.5e9, 5e33),
-            "lbl_y": 1e32,
-            "txt": r'${\rm Supernova}~e^+ e^- \rightarrow \phi \phi$',
-        },
-        "gluon": {
-            "ylim": (.5e4, 5e30),
-            "lbl_y": 3e29,
-            "txt": r'${\rm Supernova}~N N \rightarrow N N \phi \phi$',
-        }
+    label = {
+        'photon': r'${\rm Supernova}~\gamma \gamma \rightarrow \phi \phi$',
+        'electron': r'${\rm Supernova}~e^+ e^- \rightarrow \phi \phi$',
+        'gluon': r'${\rm Supernova}~N N \rightarrow N N \phi \phi$'
     }[coupling_type]
     
-    lbl_x = 1e-19
+    constraint_fill = np.full_like(Elist, constraint)
+    ax.plot(Elist, constraint_fill, color = 'gray', linewidth = 3)
+    ax.fill_between(Elist, constraint_fill, 1e100, color = 'gray', alpha = 0.1)
     
-    constraint = np.ones_like(Elist)*constraint
-    ax.set_ylim(*config["ylim"])
-    ax.text(lbl_x, config["lbl_y"], config["txt"], fontsize = 30, color = 'black')
-    ax.plot(Elist, constraint, color = 'gray', linewidth = 3)
-    ax.fill_between(Elist, constraint, 1e100, color = 'gray', alpha = 0.1)
+    if x_label is None:
+        xmin, _ = ax.get_xlim()
+        x_label = xmin * 3
+    if y_label is None:
+        y_label = constraint * 3
+    ax.text(x_label, y_label, label, fontsize = 30, color = 'black')
         
 def label_critical_screening(ax, K_E, K_atm, coupling_type, filename):
     """ Label critical screening lines """
