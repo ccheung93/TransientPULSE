@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib.ticker import FuncFormatter
+import matplotlib.pyplot as plt
 
 COUPLING_LABELS = {
     'linear': {
@@ -37,6 +38,14 @@ class Plot:
 def exponentlabel(x, pos):
     return str("{:.0f}".format(np.log10(x)))
 
+def set_matplotlib_style(math_fontset='cm', fontsize=35, font_family='STIXGeneral', hatch_color='lightgray'):
+    plt.rcParams.update({
+        'mathtext.fontset': math_fontset,
+        'font.size': fontsize,
+        'font.family': font_family,
+        'hatch.color': hatch_color
+    })
+    
 def setup_axes(ax, xlims, ylims):
     """ Set up axes for subplot (i, j) """
     ax.set_yscale('log')
@@ -51,6 +60,7 @@ def setup_axes(ax, xlims, ylims):
     ax.set_ylim(*ylims)
     
     ax.tick_params(direction="in")
+    plt.subplots_adjust(wspace = 0, hspace = 0)
 
 def setup_axis_labels(fig, coupling_order, coupling_type, fontsize = 45, padding = 50):
     shadowaxes = fig.add_subplot(111, xticks=[], yticks=[], frame_on=False)

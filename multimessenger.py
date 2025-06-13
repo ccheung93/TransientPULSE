@@ -143,14 +143,8 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Tr
         Microscope_m, FifthForce_m = load_linear_constraints(Elist)
 
     # Setup plot
+    set_matplotlib_style()
     fig, ax = plt.subplots(2, 2, figsize = (30, 21), sharex = True, sharey = True)
-    plt.rcParams.update({
-        'mathtext.fontset': 'cm',
-        'font.size': 35,
-        'font.family': 'STIXGeneral',
-        'hatch.color': 'lightgray'
-    })
-    plt.subplots_adjust(wspace = 0, hspace = 0)
 
     for i in range(2):
         for j in range(2):
