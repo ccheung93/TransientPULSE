@@ -169,7 +169,7 @@ def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fonts
     # Label constraint
     if pos_x is None:
         xmin, xmax = ax.get_xlim()
-        pos_x = xmax / 2e5
+        pos_x = xmax / 1e6
     if pos_y is None:
         pos_y = constraint * 1.25
     ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize = fontsize, color = color)  
