@@ -31,9 +31,22 @@ ALP_EXCLUSION_LABELS = {
 }
 
 class Plot:
-    def __init__(self, xlims, ylims):
+    DEFAULT_LEGEND_CONFIG = {
+        'fontsize': 30,
+        'loc': 'upper right',
+        'frameon': True,
+        'bbox_to_anchor': (1.0, 1.0),
+        'title_fontsize': 32
+    }
+    
+    def __init__(self, xlims, ylims, exclude_mass=False, include_legend=True, legend_config=None):
         self.xlims = xlims
         self.ylims = ylims
+        self.exclude_mass = exclude_mass
+        self.include_legend = include_legend
+        self.legend_config = {**self.DEFAULT_LEGEND_CONFIG, **(legend_config or {})}
+        self.handles = []
+        self.labels = []
 
 def exponentlabel(x, pos):
     return str("{:.0f}".format(np.log10(x)))
@@ -118,9 +131,9 @@ def plot_FifthForce(ax, range_x, fifthForce_m):
     """ Plot fifth-force limits """
     ax.plot(range_x, fifthForce_m)
 
-def plot_coupling_from_time_delay(ax, range_x, coupling, color):
+def plot_coupling_from_time_delay(ax, range_x, coupling, color, label=None):
     """ Plot the detection delays of 1 day and 1 year relative to a light-speed signal """
-    ax.plot(range_x, coupling, color = color, linewidth = 2, linestyle = '--'  )
+    ax.plot(range_x, coupling, color = color, linewidth = 2, linestyle = '--', label = label)
     
 def plot_fill_coupling_from_time_delay(ax, range_x, dday1, dday30, dyear1, dyear30):
     """ Fill in region between dilatonic coupling curves"""
@@ -135,9 +148,9 @@ def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
     """ Shade in the viable parameter space """
     ax.fill_between(fillregion_x, coupling, fillregion_y, where = coupling < fillregion_y, color = 'tab:green', alpha = 0.3)
 
-def plot_coupling(ax, Elist, coupling):
+def plot_coupling(ax, Elist, coupling, label=None):
     """ Plot the projected sensitivity of future experiments """
-    ax.plot(Elist, coupling, c = 'k', linewidth = 2, alpha = 1)
+    ax.plot(Elist, coupling, c = 'k', linewidth = 2, alpha = 1, label = label)
     
 def plot_crit_couplings(ax, range_x, d_earth, d_exp, d_atm):
     """ Plot the critical screening from the Earth, atmosphere, and experimental apparatus """
@@ -148,16 +161,16 @@ def plot_crit_couplings(ax, range_x, d_earth, d_exp, d_atm):
     # Shade in the region above the critical coupling at Earth
     ax.fill_between(range_x, d_earth, 1e100, color = 'tab:blue', alpha = .05)
 
-def plot_E_unc(ax, E_unc, pos_x=None, pos_y=None, fontsize=35, color='chocolate', label_color='tab:brown'):
+def plot_E_unc(ax, E_unc, color='chocolate'):
     """ Plot the scalar energy calculated from the uncertainty principle"""
     ax.axvline(E_unc, color = color, linestyle = '--')
     
     # Shade in the region up to E_unc
     ax.axvspan(1e-100, E_unc, color = color, alpha = 0.1)
-    
-    # Label E_unc
+
+def label_E_unc(ax, pos_x, pos_y, fontsize=35, color='tab:brown'):
     if pos_x and pos_y:
-        add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize = fontsize, color = label_color) 
+        add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize = fontsize, color = color) 
     
 def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=35, color='black'):
     """ Plot the astrophysical constraint"""
