@@ -310,6 +310,9 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     end_time = time.time()
     print(f'TIMING >>> Time up to saving waveform_plot was {end_time - start_time:.2f}s.')
     
+    return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array
+
+def plot_spectrogram(N_points, t_duration_Earth_s, E, spectrogram_array):
     ### Spectrogram
     start_time = time.time()
     print("spectrogram started") 
@@ -341,9 +344,6 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
 
     end_time = time.time()
     print(f"TIMING >>> Saved spectrogram_plot.pdf in {end_time - start_time:.2f}s.")
-    
-    return t_duration_Earth_s, phi_t_final
-
 
 class SpectrumConfig:
     def __init__(self, spectrum_type='bosenova',
@@ -471,9 +471,9 @@ def run_propagation(config):
     
     
     # Run propagation
-    t_duration, phi_signal = propagation(spectrum, density_profile, config.mass, config.coupling, config.K, config.burst_duration)
+    t_duration, phi_signal, N_points, E, spectrogram = propagation(spectrum, density_profile, config.mass, config.coupling, config.K, config.burst_duration)
     
-    return t_duration, phi_signal
+    return t_duration, N_points, E, spectrogram
 
 def save_spectrum_figure(spectrum):
     fig, ax = plt.subplots(1,1,figsize = (30,21),sharex = False,sharey = False)
@@ -522,7 +522,8 @@ if __name__ == '__main__':
     )
     
     try:
-        t_duration, phi = run_propagation(config_gaussian)
+        t_duration, N_points, E, spectrogram = run_propagation(config_gaussian)
+        plot_spectrogram(N_points, t_duration, E, spectrogram)
     except Exception as e:
         print(f"Error during propagation: {e}")
     
