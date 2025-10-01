@@ -232,15 +232,10 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     t_fastest = np.min(t_arrivals)
     t_slowest = np.max(t_arrivals) + ts_eV
     
-    # TODO - check if there are "insane?" values in the spectrum
-    # If there are, then we set a "valid" region:
-    # if valid1:
-    #     # Looking at factor of max_to_min_amp_ratio from max flux
-    #     max_to_min_amp_ratio = 10
-    #     valid = np.where((A >= max(A)/max_to_min_amp_ratio))[0]
-    #
-
-    valid1 = True
+    valid1 = False
+    N_spectrogram_points = 2e3
+    spectrogram_array = np.zeros((len(E),int(N_spectrogram_points)))
+    
     if valid1:
         # Looking at factor of max_to_min_amp_ratio from max flux
         max_to_min_amp_ratio = 1000
@@ -248,33 +243,26 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     else:
         # Looking at part of the waveform that arrives in the lifetime of the experiment, e.g. the tail of the spectrum
         valid = np.where((t_arrivals - t_fastest) <= t_exp_ineV)[0]
-        
-    # Plot valid region
-    fig, ax = plt.subplots(1,1,figsize = (30,21), sharex = False,sharey = False)
-    ax.plot(p[valid], A[valid])
-    ax.set_xlabel('Momentum (eV)')
-    ax.set_ylabel(r'$\phi(t)$')
-
-    print('saving valid region of waveform...')
-    plt.savefig('waveform_plot_valid.pdf', dpi=400)
     
-    # Define valid time window
+    # Plot valid region
+    # fig, ax = plt.subplots(1,1,figsize = (30,21),sharex = False,sharey = False)
+    # ax.plot(p[valid], A[j][valid])
+    # ax.set_xlabel('Momentum (eV)')
+    # ax.set_ylabel(r'$\phi(t)$')
+    
+    # print('saving valid region of waveform...')
+    # plt.savefig('waveform_plot_valid.pdf', dpi=400)
+    
+    # Define valid time window    
     t_fastest = np.min(t_arrivals[valid])
     t_slowest = np.max(t_arrivals[valid]) + ts_eV
-    t_d = (t_slowest - t_fastest)
-    
-    p_fastest = np.max(p[valid])
-    p_slowest = np.min(p[valid])
-    
+    t_d = t_slowest - t_fastest
     print('time in years is:' + str((t_fastest/SEC_TO_INEV)/3e7))
+
+    N_points = min(int(2*t_d * np.max(E[valid]/(2*np.pi))), 1e4)
+    print(f"N_points={int(2*t_d * np.max(E[valid]/(2*np.pi)))}")
     
-    # TODO - Why is N_points shifting spectrogram signal downward?
-    #N_points = int(100*t_d/(ts_sec*SEC_TO_INEV))
-    N_points = int(10*t_d * np.max(p[valid]/(2*PI))) # 10 points per cycle
-    #N_points = int(10 * t_exp_ineV * np.max(p[valid]))
-    print(f"N_points={N_points}")
-    
-    t_duration = np.linspace(t_fastest, t_slowest, N_points)
+    t_duration = np.linspace(t_fastest, t_slowest, int(N_spectrogram_points))
     t_duration_Earth_s = (t_duration - t_fastest)/SEC_TO_INEV
 
     phi_t_final = np.zeros(len(t_duration))
@@ -294,12 +282,14 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     t_end = t_arrivals[i0] + ts_eV   # Defined by the slowest momentum mode in the bin
     
     # Indices in the time array
-    start_index = ((t_start - t_fastest) / delta_t_duration).astype(int)
-    stop_index = ((t_end - t_fastest) / delta_t_duration).astype(int)
+    start_index = ((t_start - t_fastest) /(delta_t_duration)).astype(int)
+    stop_index = ((t_end- t_fastest) / (delta_t_duration)).astype(int)
     
+    # TODO - check R dependence
     for i, (start, stop, p_a, A_a, E_a) in enumerate(zip(start_index, stop_index, p_avg, A_avg, E_avg)):
         time_window = t_duration[start:stop]
-        phi = A_a * np.cos(E_a * time_window - p_a * R)
+        spectrogram_array[i][start:stop] += 0.5 * (E_a**2) * (A_a/R)**2
+        phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
         phi_t_final[start:stop] +=  phi
 
     # Plotting waveform
@@ -311,7 +301,6 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     plt.tight_layout()
     
     ax3.plot(t_duration_Earth_s, phi_t_final)
-    ax3.set_xscale('log')
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel(r'$\phi(t)$')
 
@@ -324,48 +313,31 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     ### Spectrogram
     start_time = time.time()
     print("spectrogram started") 
-    delta_t = (t_duration[1] - t_duration[0]) / SEC_TO_INEV
+    delta_t = t_duration_Earth_s[1]- t_duration_Earth_s[0]
     print(f'delta_t = {delta_t}, N={N_points}')
-    
-    # Scipy SFFT
-    g_std = 5  # standard deviation for Gaussian window in samples
-    hop = 10
-    # w = gaussian(50, std=5, sym=True)  # symmetric Gaussian window
-    w = hamming(1000, sym=True) # symmetric Hamming window
-    SFT = ShortTimeFFT(w, hop=hop, fs=1/delta_t, scale_to='magnitude')
-    Sx = SFT.spectrogram(phi_t_final)  # perform the STFT
-    
-    print(f"Size of spectrogram: {Sx.shape}")
     
     end_time = time.time()
     print(f"TIMING >>> Spectrogram took {end_time - start_time:.2f}s.")
     
     # Plot spectrogram
     start_time = time.time()
-    n = len(phi_t_final)
-    freqs = SFT.f
-    times = SFT.t(n)
-    times = times - times[0] + 1e-12 # shift so min(times) > 0
+    freq = E*SEC_TO_INEV/(2*PI)
     
     fig, ax5 = plt.subplots(figsize = (30, 21))
-    im = ax5.imshow(np.abs(Sx), 
-                    aspect="auto", origin="lower",
-                    #extent=[t_duration_Earth_s[0], t_duration_Earth_s[-1], freq[0], freq[-1]])
-                    extent=[times[0], times[-1], freqs[0], freqs[-1]]
-    )
-    fig.colorbar(im, label="Magnitude $|S_x(t, f)|$")
-    ax5.set_yscale('linear')
-    ax5.set_xscale('linear')
-    ax5.set(xlabel=f"Time $t$ in seconds ({SFT.p_num(N_points)} slices, " +
-                    rf"$\Delta t = {SFT.delta_t:g}\,$s)",
-            ylabel=f"Freq. $f$ in Hz ({SFT.f_pts} bins, " +
-                    rf"$\Delta f = {SFT.delta_f:g}\,$Hz)",
-            # xlim = (t_duration_Earth_s[1], t_duration_Earth_s[-1])
-            xlim = (times[0], times[-1])
+    cmap_name = 'viridis' # Choose your desired colormap
+    cmap = plt.colormaps[cmap_name]
+    rgb = plt.colormaps[cmap_name](0)
+    cmap.set_bad(rgb)
+    masked_data = np.ma.masked_where(spectrogram_array <= 0, spectrogram_array)
+    
+    im = ax5.imshow(masked_data,aspect="auto", origin="lower",extent = [t_duration_Earth_s[0], t_duration_Earth_s[-1], freq[0], freq[-1]], norm=matplotlib.colors.LogNorm(),cmap=cmap)
+    fig.colorbar(im, label=r"$\rho_*~[{\rm eV}^4]$")
+    ax5.set(xlabel="Time (s)",
+            ylabel=r"Frequency $f$ [Hz]"
             )
+    
     plt.savefig('spectrogram_plot.pdf', bbox_inches='tight')
     plt.close()
-    
 
     end_time = time.time()
     print(f"TIMING >>> Saved spectrogram_plot.pdf in {end_time - start_time:.2f}s.")
@@ -408,7 +380,7 @@ class SpectrumGenerator:
         raise NotImplementedError("Subclasses must implement generate()")
     
 class BosenovaSpectrum(SpectrumGenerator):
-    def __init__(self, filepath, mass, num_points=5000):
+    def __init__(self, filepath, mass, num_points=1000):
         self.filepath = filepath
         self.mass = mass
         self.num_points = num_points
@@ -427,7 +399,7 @@ class BosenovaSpectrum(SpectrumGenerator):
         return momenta, amplitudes
 
 class GaussianSpectrum(SpectrumGenerator):
-    def __init__(self, mass, burst_duration, peak_momentum, width, amplitude, num_points=10000):
+    def __init__(self, mass, burst_duration, peak_momentum, width, amplitude, num_points=1000):
         """_summary_
 
         Args:
@@ -474,7 +446,7 @@ class GaussianSpectrum(SpectrumGenerator):
 
 def generate_spectrum(config):
     if config.spectrum_type == 'bosenova':
-        return BosenovaSpectrum(config.bosenova_path, config.mass, num_points=5000)
+        return BosenovaSpectrum(config.bosenova_path, config.mass, num_points=3000)
     elif config.spectrum_type == 'gaussian':
         return GaussianSpectrum(config.mass, config.burst_duration, config.peak_momentum, config.width, config.amplitude)
     else:
@@ -487,14 +459,14 @@ def run_propagation(config):
     if config.spectrum_type == 'bosenova':
         x_interp, rho_interp = interpolate_data(x/10000, rho, config.density_num_points) # Converting 10 kpc to 1 pc
     else:
-        x_interp, rho_interp = interpolate_data(x/1000, rho, config.density_num_points)
+        x_interp, rho_interp = interpolate_data(x, rho, config.density_num_points)
     density_profile = [x_interp, rho_interp]
     
     # Generate spectrum
     spectrum_generator = generate_spectrum(config)
     momenta, amplitudes = spectrum_generator.generate()
     spectrum = [momenta, amplitudes]
-    
+    ####TO-DO: When introducing time dependence, use nested arrays for different amplitudes.
     # Save spectrum figure
     
     
@@ -520,7 +492,7 @@ if __name__ == '__main__':
     config_bosenova = SpectrumConfig(
         spectrum_type='bosenova', # 'gaussian'
         mass=mass,
-        coupling=1e20,
+        coupling=1.5e22,
         burst_duration=burst_duration_bosenova,
         K=1e-3,
         amplitude=1e20,
@@ -529,18 +501,22 @@ if __name__ == '__main__':
         bosenova_path='Spectra/BosonStarSpectrumRelOnly.txt'
     )
     
-    burst_duration_gaussian = 2*np.pi*10/(mass * SEC_TO_INEV)
-    width = 2 * mass
-    peak_momentum = 10 * mass
+    ##### TODO - Investigate the burst parameter relationships so that everything is nicely consistent.
+    
+    mul = 100
+    burst_duration_gaussian = 2*np.pi*mul/(mass * SEC_TO_INEV) #1e1
+    # print(30/(burst_duration_gaussian * SEC_TO_INEV))
+    width = 2e1*mass#10/ (burst_duration_gaussian * SEC_TO_INEV)
+    peak_momentum = 2e2 * mass #30/ (burst_duration_gaussian * SEC_TO_INEV)
     config_gaussian = SpectrumConfig(
         spectrum_type='gaussian',
-        mass=1e-19, 
-        coupling=0,
+        mass=mass,
+        coupling=1e20,
         burst_duration=burst_duration_gaussian,
-        K=1e-3,
-        amplitude=1e20,
+        # K=1e-3,
+        amplitude=1e50,
         density_profile_path='Galactic_Density_Profile.csv',
-        density_num_points=1000,
+        density_num_points=2000,
         peak_momentum=peak_momentum,
         width=width
     )
