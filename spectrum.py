@@ -1,53 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jul 16 14:07:21 2025
-
-@author: arakawaj
-"""
-
 import numpy as np
-import cmath
-import math as math
+import math
 import matplotlib.pyplot as plt
-import matplotlib.font_manager
-from matplotlib import rcParams
 import matplotlib.colors as mcolors
-import matplotlib.patches as patches
-from IPython.core.display import HTML
-import csv
-rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['Tahoma', 'DejaVu Sans',
-                               'Lucida Grande', 'Verdana']
-from matplotlib import rc
-from matplotlib import ticker, cm
-from matplotlib.ticker import FuncFormatter
-from matplotlib.colors import LogNorm
-from matplotlib.ticker import LogFormatter, LogFormatterSciNotation 
-from matplotlib import cm, colors
-import matplotlib.image as mpimg
-
-usetex: True
 import time
-
 import scipy
-from scipy.signal import ShortTimeFFT
-from scipy.signal.windows import gaussian, hamming
-from scipy.interpolate import make_interp_spline, BSpline
-
-from decimal import Decimal, getcontext
-import sys
-
-
-# INEV_TO_METERS = 0.197e-18 * 1e9/3.086e13   # eV^-1 to parsecs
-# eV_to_solar = (1.67e-27/2e30)*1e-9      # 1 eV in solar masses
-# SEC_TO_INEV = 1e-9/(6.528e-25)          # 1 second in eV^-1
-# sec_in_year = 3.154e7                   # number of seconds in 1 year
-# c = 3e8                                 # speed of light in m/s
-# GCM3_TO_EV4 = 4.247e18                  # g/cm^3 to eV^4
-# vDM = 1e-3                              # Average velocity of galactic Dark Matter
-# dt = 1 * 3.154e7
-# PLANCK_MASS_EV = 1.2e28 #eV
 
 INEV_TO_METERS = 1.97e-7                           # eV^-1 to meters
 PC_TO_METERS = 3.086e16                            # parsecs to meters
@@ -59,8 +15,6 @@ SEC_TO_INEV = 1/HBAR                               # 1 second to 1/eV
 PLANCK_MASS_EV = 1.2e28                            # Planck mass in eV
 PI = np.pi
 YEAR = 3600*24*365
-
-cmap = plt.get_cmap('viridis')
 
 def read_medium_data(filename, i_R=0, i_rho=1):
     """ Read density (g/cm^3) vs. position (kpc) data from CSV file
@@ -319,7 +273,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array):
     freq = E*SEC_TO_INEV/(2*PI)
     
     fig, ax5 = plt.subplots(figsize = (30, 21))
-    cmap_name = 'viridis' # Choose your desired colormap
+    cmap_name = 'viridis'
     cmap = plt.colormaps[cmap_name]
     rgb = plt.colormaps[cmap_name](0)
     cmap.set_bad(rgb)
@@ -329,7 +283,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array):
                     aspect="auto", 
                     origin="lower", 
                     extent = [t_min, t_max, freq[0], freq[-1]], 
-                    norm=matplotlib.colors.LogNorm(), 
+                    norm=mcolors.LogNorm(), 
                     cmap=cmap)
     fig.colorbar(im, label=r"$\rho_*~[{\rm eV}^4]$")
     ax5.set(xlabel="Time (s)",
