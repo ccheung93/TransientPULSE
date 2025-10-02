@@ -191,7 +191,7 @@ def t_prop(m, E, x, rho, K, d2):
         temp = temp + (0.5)*(1/vg[i+1] + 1/vg[i]) * (x2 - x1)
     return temp
 
-def propagation(spec, density_profile, m, d, K, ts_sec):
+def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=None, time_step_range=None, N_time_steps=None):
     """
     Take a spectrum, and for each mode in it, propagate through the code:
     Read spec in as a csv file of form: momentum or energy , flux or power etc.
@@ -218,6 +218,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     t_exp_sec = YEAR
     t_exp_ineV = t_exp_sec*SEC_TO_INEV
     ts_eV = ts_sec*SEC_TO_INEV
+    N_time_steps = N_time_steps if N_time_steps else 1
     
     # Spectrum
     p, A = spec
@@ -229,41 +230,32 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     R = x[-1] # distance from the Earth to Galactic center [kpc] TODO - parametrize this
     
     t_arrivals = np.array([t_prop(m, E_i, x, rho, K, d) for E_i in E])
-    t_fastest = np.min(t_arrivals)
+    t_fastest_absolute = np.min(t_arrivals)
     t_slowest = np.max(t_arrivals) + ts_eV
     
-    valid1 = False
-    N_spectrogram_points = 2e3
-    spectrogram_array = np.zeros((len(E),int(N_spectrogram_points)))
+    valid1 = True
+    spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
     
     if valid1:
         # Looking at factor of max_to_min_amp_ratio from max flux
-        max_to_min_amp_ratio = 1000
+        max_to_min_amp_ratio = 1e7
         valid = np.where((A >= max(A)/max_to_min_amp_ratio))[0]
     else:
         # Looking at part of the waveform that arrives in the lifetime of the experiment, e.g. the tail of the spectrum
-        valid = np.where((t_arrivals - t_fastest) <= t_exp_ineV)[0]
+        valid = np.where((t_arrivals - t_fastest_absolute) <= t_exp_ineV)[0]
     
-    # Plot valid region
-    # fig, ax = plt.subplots(1,1,figsize = (30,21),sharex = False,sharey = False)
-    # ax.plot(p[valid], A[j][valid])
-    # ax.set_xlabel('Momentum (eV)')
-    # ax.set_ylabel(r'$\phi(t)$')
-    
-    # print('saving valid region of waveform...')
-    # plt.savefig('waveform_plot_valid.pdf', dpi=400)
-    
-    # Define valid time window    
-    t_fastest = np.min(t_arrivals[valid])
-    t_slowest = np.max(t_arrivals[valid]) + ts_eV
+    # Define valid time window
+    delta_t_s = [time_step / N_time_steps for time_step in time_step_range] if time_step_range else [0, 0]
+    t_fastest = np.min(t_arrivals[valid]) + delta_t_s[0]
+    t_slowest = np.max(t_arrivals[valid]) + delta_t_s[1]
     t_d = t_slowest - t_fastest
     print('time in years is:' + str((t_fastest/SEC_TO_INEV)/3e7))
 
     N_points = min(int(2*t_d * np.max(E[valid]/(2*np.pi))), 1e4)
-    print(f"N_points={int(2*t_d * np.max(E[valid]/(2*np.pi)))}")
+    print(f"N_points={int(2*t_d * np.max(E[valid]/(2*np.pi)))}", N_points)
     
-    t_duration = np.linspace(t_fastest, t_slowest, int(N_spectrogram_points))
-    t_duration_Earth_s = (t_duration - t_fastest)/SEC_TO_INEV
+    t_duration = np.linspace(t_fastest, t_slowest, int(N_points_spectrogram))
+    t_duration_Earth_s = (t_duration - t_fastest_absolute)/SEC_TO_INEV
 
     phi_t_final = np.zeros(len(t_duration))
     
@@ -278,12 +270,12 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     E_avg = np.sqrt(m**2 + p_avg**2)
     
     # Time window for each momentum mode
-    t_start = t_arrivals[i1]         # Defined by fastest momentum mode in the momentum bin
-    t_end = t_arrivals[i0] + ts_eV   # Defined by the slowest momentum mode in the bin
+    t_start = t_arrivals[i1] + delta_t_s[0]     # Defined by fastest momentum mode in the momentum bin
+    t_end = t_arrivals[i0] + delta_t_s[1]       # Defined by the slowest momentum mode in the bin
     
     # Indices in the time array
-    start_index = ((t_start - t_fastest) /(delta_t_duration)).astype(int)
-    stop_index = ((t_end- t_fastest) / (delta_t_duration)).astype(int)
+    start_index = ((t_start - t_fastest_absolute) /(delta_t_duration)).astype(int)
+    stop_index = ((t_end- t_fastest_absolute) / (delta_t_duration)).astype(int)
     
     # TODO - check R dependence
     for i, (start, stop, p_a, A_a, E_a) in enumerate(zip(start_index, stop_index, p_avg, A_avg, E_avg)):
@@ -312,16 +304,16 @@ def propagation(spec, density_profile, m, d, K, ts_sec):
     
     return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array
 
-def plot_spectrogram(N_points, t_duration_Earth_s, E, spectrogram_array):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array):
     ### Spectrogram
     start_time = time.time()
     print("spectrogram started") 
-    delta_t = t_duration_Earth_s[1]- t_duration_Earth_s[0]
+    delta_t = (t_max - t_min) / N_points
     print(f'delta_t = {delta_t}, N={N_points}')
     
     end_time = time.time()
     print(f"TIMING >>> Spectrogram took {end_time - start_time:.2f}s.")
-    
+    print('TIME_RANGE', t_min, t_max)
     # Plot spectrogram
     start_time = time.time()
     freq = E*SEC_TO_INEV/(2*PI)
@@ -333,7 +325,12 @@ def plot_spectrogram(N_points, t_duration_Earth_s, E, spectrogram_array):
     cmap.set_bad(rgb)
     masked_data = np.ma.masked_where(spectrogram_array <= 0, spectrogram_array)
     
-    im = ax5.imshow(masked_data,aspect="auto", origin="lower",extent = [t_duration_Earth_s[0], t_duration_Earth_s[-1], freq[0], freq[-1]], norm=matplotlib.colors.LogNorm(),cmap=cmap)
+    im = ax5.imshow(masked_data, 
+                    aspect="auto", 
+                    origin="lower", 
+                    extent = [t_min, t_max, freq[0], freq[-1]], 
+                    norm=matplotlib.colors.LogNorm(), 
+                    cmap=cmap)
     fig.colorbar(im, label=r"$\rho_*~[{\rm eV}^4]$")
     ax5.set(xlabel="Time (s)",
             ylabel=r"Frequency $f$ [Hz]"
@@ -418,20 +415,16 @@ class GaussianSpectrum(SpectrumGenerator):
         self.num_points = num_points
     
     def generate(self):
-        tstar_ineV = self.burst_duration * SEC_TO_INEV
-        
         dw = self.width
         p_peak = self.peak_momentum
         
         # momentum range 
-        # p_initial = 0.7 * p_peak # 2 * PI / tstar_ineV
-        # p_final = 1.3 * p_peak #100 / tstar_ineV
-        p_initial = p_peak - dw*np.sqrt(np.log(10)) # 2 * PI / tstar_ineV
-        p_final =  p_peak + dw*np.sqrt(np.log(10))
+        p_initial = p_peak - dw*np.sqrt(2*np.log(10)) # 2 * PI / tstar_ineV
+        p_final =  p_peak + dw*np.sqrt(2*np.log(10))
         momenta = np.linspace(p_initial, p_final, self.num_points)
         
         amplitudes = self.amplitude * np.exp(-((momenta-p_peak)**2)/(2*dw**2))
-        
+
         # plot 
         fig, ax = plt.subplots(figsize = (30, 21))
         ax.plot(momenta, amplitudes)
@@ -452,7 +445,7 @@ def generate_spectrum(config):
     else:
         raise ValueError(f"Unknown spectrum type: {config.spectrum_type}")
 
-def run_propagation(config):
+def run_propagation(config, N_points_spectrogram, delta_t_s=None, N_time_steps=None):
     # Reading density profile from CSV file
     x, rho = read_medium_data(config.density_profile_path, i_R=0, i_rho=2)
     
@@ -471,7 +464,15 @@ def run_propagation(config):
     
     
     # Run propagation
-    t_duration, phi_signal, N_points, E, spectrogram = propagation(spectrum, density_profile, config.mass, config.coupling, config.K, config.burst_duration)
+    t_duration, phi_signal, N_points, E, spectrogram = propagation(spectrum, 
+                                                                   density_profile, 
+                                                                   config.mass, 
+                                                                   config.coupling, 
+                                                                   config.K, 
+                                                                   config.burst_duration, 
+                                                                   N_points_spectrogram,
+                                                                   delta_t_s, 
+                                                                   N_time_steps)
     
     return t_duration, N_points, E, spectrogram
 
@@ -505,7 +506,6 @@ if __name__ == '__main__':
     
     mul = 100
     burst_duration_gaussian = 2*np.pi*mul/(mass * SEC_TO_INEV) #1e1
-    # print(30/(burst_duration_gaussian * SEC_TO_INEV))
     width = 2e1*mass#10/ (burst_duration_gaussian * SEC_TO_INEV)
     peak_momentum = 2e2 * mass #30/ (burst_duration_gaussian * SEC_TO_INEV)
     config_gaussian = SpectrumConfig(
@@ -513,7 +513,7 @@ if __name__ == '__main__':
         mass=mass,
         coupling=1e20,
         burst_duration=burst_duration_gaussian,
-        # K=1e-3,
+        K=1e-3,
         amplitude=1e50,
         density_profile_path='Galactic_Density_Profile.csv',
         density_num_points=2000,
@@ -521,9 +521,48 @@ if __name__ == '__main__':
         width=width
     )
     
-    try:
-        t_duration, N_points, E, spectrogram = run_propagation(config_gaussian)
-        plot_spectrogram(N_points, t_duration, E, spectrogram)
-    except Exception as e:
-        print(f"Error during propagation: {e}")
+    time_dependent = True
+    
+    if time_dependent:
+        N_time_steps = 20
+        N_points_spectrogram = 2e3
+        gaussian_configs = []
+        for i in range(N_time_steps):
+            config_gaussian = SpectrumConfig(
+                spectrum_type='gaussian',
+                mass=mass,
+                coupling=1e20,
+                burst_duration=burst_duration_gaussian,
+                K=1e-3,
+                amplitude=1e50*np.exp(-(i-(N_time_steps/2))**2/(N_time_steps/3)**2),
+                density_profile_path='Galactic_Density_Profile.csv',
+                density_num_points=2000,
+                peak_momentum=peak_momentum,
+                width=width
+            )
+            gaussian_configs.append(config_gaussian)
+
+        t_durations = []
+        N_points_array = []
+        E_array = []
+        spectrogram_array = []
+        for i, config in enumerate(gaussian_configs):
+            delta_t_s = [i * burst_duration_gaussian * SEC_TO_INEV, 
+                         (i + 1) * burst_duration_gaussian * SEC_TO_INEV] 
+            t_duration, N_points, E, spectrogram = run_propagation(config, N_points_spectrogram, delta_t_s, N_time_steps)
+            t_durations.append(t_duration)
+            N_points_array.append(N_points)
+            E_array.append(E)
+            spectrogram_array.append(spectrogram)
+
+        spectrogram_total = np.sum(spectrogram_array, axis=0)
+        t_min = min(t_dur.min() for t_dur in t_durations)
+        t_max = max(t_dur.max() for t_dur in t_durations)
+        plot_spectrogram(N_points_spectrogram, t_min, t_max, E, spectrogram_total)
+    else:
+        try:
+            t_duration, N_points, E, spectrogram = run_propagation(config_gaussian)
+            plot_spectrogram(N_points, t_duration, E, spectrogram)
+        except Exception as e:
+            print(f"Error during propagation: {e}")
     
