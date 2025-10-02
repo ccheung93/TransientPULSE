@@ -258,17 +258,9 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     
     return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array):
-    ### Spectrogram
-    start_time = time.time()
-    print("spectrogram started") 
-    delta_t = (t_max - t_min) / N_points
-    print(f'delta_t = {delta_t}, N={N_points}')
-    
-    end_time = time.time()
-    print(f"TIMING >>> Spectrogram took {end_time - start_time:.2f}s.")
-    print('TIME_RANGE', t_min, t_max)
+def plot_spectrogram(t_min, t_max, E, spectrogram_array):
     # Plot spectrogram
+    print("spectrogram started") 
     start_time = time.time()
     freq = E*SEC_TO_INEV/(2*PI)
     
@@ -278,7 +270,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array):
     rgb = plt.colormaps[cmap_name](0)
     cmap.set_bad(rgb)
     masked_data = np.ma.masked_where(spectrogram_array <= 0, spectrogram_array)
-    
+
     im = ax5.imshow(masked_data, 
                     aspect="auto", 
                     origin="lower", 
@@ -510,11 +502,11 @@ if __name__ == '__main__':
         spectrogram_total = np.sum(spectrogram_array, axis=0)
         t_min = min(t_dur.min() for t_dur in t_durations)
         t_max = max(t_dur.max() for t_dur in t_durations)
-        plot_spectrogram(N_points_spectrogram, t_min, t_max, E, spectrogram_total)
+        plot_spectrogram(t_min, t_max, E, spectrogram_total)
     else:
         try:
             t_duration, N_points, E, spectrogram = run_propagation(config_bosenova, N_points_spectrogram)
-            plot_spectrogram(N_points, min(t_duration), max(t_duration), E, spectrogram)
+            plot_spectrogram(min(t_duration), max(t_duration), E, spectrogram)
         except Exception as e:
             print(f"Error during propagation: {e}")
     
