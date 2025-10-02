@@ -199,11 +199,11 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         valid = np.where((t_arrivals - t_fastest_absolute) <= t_exp_ineV)[0]
     
     # Define valid time window
-    delta_t_s = [time_step / N_time_steps for time_step in time_step_range] if time_step_range else [0, 0]
+    delta_t_s = [time_step / N_time_steps for time_step in time_step_range] if time_step_range else [0, ts_eV]
     t_fastest = np.min(t_arrivals[valid]) + delta_t_s[0]
     t_slowest = np.max(t_arrivals[valid]) + delta_t_s[1]
     t_d = t_slowest - t_fastest
-    print('time in years is:' + str((t_fastest/SEC_TO_INEV)/3e7))
+    print('time in years is: ' + str((t_fastest/SEC_TO_INEV)/3e7))
 
     N_points = min(int(2*t_d * np.max(E[valid]/(2*np.pi))), 1e4)
     print(f"N_points={int(2*t_d * np.max(E[valid]/(2*np.pi)))}", N_points)
@@ -345,7 +345,9 @@ class BosenovaSpectrum(SpectrumGenerator):
         x_interp, y_interp = interpolate_data(x_raw, y_raw, self.num_points)
         
         momenta = x_interp * self.mass
-        amplitudes = y_interp * self.mass
+        
+        ##### TODO - Determine Normalization: Right now, this is A/self-coupling. This aligns with our bosenova paper.
+        amplitudes = np.sqrt(y_interp * (1/1e-85))
         
         return momenta, amplitudes
 
@@ -413,10 +415,7 @@ def run_propagation(config, N_points_spectrogram, delta_t_s=None, N_time_steps=N
     spectrum_generator = generate_spectrum(config)
     momenta, amplitudes = spectrum_generator.generate()
     spectrum = [momenta, amplitudes]
-    ####TO-DO: When introducing time dependence, use nested arrays for different amplitudes.
-    # Save spectrum figure
-    
-    
+
     # Run propagation
     t_duration, phi_signal, N_points, E, spectrogram = propagation(spectrum, 
                                                                    density_profile, 
@@ -457,7 +456,7 @@ if __name__ == '__main__':
     )
     
     ##### TODO - Investigate the burst parameter relationships so that everything is nicely consistent.
-    
+    N_points_spectrogram = 2e3
     mul = 100
     burst_duration_gaussian = 2*np.pi*mul/(mass * SEC_TO_INEV) #1e1
     width = 2e1*mass#10/ (burst_duration_gaussian * SEC_TO_INEV)
@@ -475,11 +474,10 @@ if __name__ == '__main__':
         width=width
     )
     
-    time_dependent = True
+    time_dependent = False
     
     if time_dependent:
         N_time_steps = 20
-        N_points_spectrogram = 2e3
         gaussian_configs = []
         for i in range(N_time_steps):
             config_gaussian = SpectrumConfig(
@@ -515,8 +513,8 @@ if __name__ == '__main__':
         plot_spectrogram(N_points_spectrogram, t_min, t_max, E, spectrogram_total)
     else:
         try:
-            t_duration, N_points, E, spectrogram = run_propagation(config_gaussian)
-            plot_spectrogram(N_points, t_duration, E, spectrogram)
+            t_duration, N_points, E, spectrogram = run_propagation(config_bosenova, N_points_spectrogram)
+            plot_spectrogram(N_points, min(t_duration), max(t_duration), E, spectrogram)
         except Exception as e:
             print(f"Error during propagation: {e}")
     
