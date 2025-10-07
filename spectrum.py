@@ -165,10 +165,6 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         t_duration (np.ndarray): array from 0 to duration of the signal at the Earth
         each_mode (np.ndarray): amplitudes of the waves
     """
-    print("propagation started")
-    
-    start_time = time.time()
-    
     t_exp_sec = YEAR
     t_exp_ineV = t_exp_sec*SEC_TO_INEV
     ts_eV = ts_sec*SEC_TO_INEV
@@ -203,10 +199,8 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_fastest = np.min(t_arrivals[valid]) + delta_t_s[0]
     t_slowest = np.max(t_arrivals[valid]) + delta_t_s[1]
     t_d = t_slowest - t_fastest
-    print('time in years is: ' + str((t_fastest/SEC_TO_INEV)/3e7))
 
     N_points = min(int(2*t_d * np.max(E[valid]/(2*np.pi))), 1e4)
-    print(f"N_points={int(2*t_d * np.max(E[valid]/(2*np.pi)))}", N_points)
     
     t_duration = np.linspace(t_fastest, t_slowest, int(N_points_spectrogram))
     t_duration_Earth_s = (t_duration - t_fastest_absolute)/SEC_TO_INEV
@@ -237,7 +231,10 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         spectrogram_array[i][start:stop] += 0.5 * (E_a**2) * (A_a/R)**2
         phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
         phi_t_final[start:stop] +=  phi
+    
+    return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array
 
+def plot_final_waveform(filename, t_duration, phi):
     # Plotting waveform
     fig, ax3 = plt.subplots(figsize = (30, 21))
     plt.rcParams['mathtext.fontset'] = 'cm'
@@ -246,17 +243,12 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     plt.rcParams['hatch.color'] = 'lightgray'
     plt.tight_layout()
     
-    ax3.plot(t_duration_Earth_s, phi_t_final)
+    ax3.plot(t_duration, phi)
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel(r'$\phi(t)$')
 
-    print('saving waveform_plot...')
-    plt.savefig('waveform_plot.pdf', dpi=300)
+    plt.savefig(filename, dpi=300)
     plt.close()
-    end_time = time.time()
-    print(f'TIMING >>> Time up to saving waveform_plot was {end_time - start_time:.2f}s.')
-    
-    return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array
 
 def plot_spectrogram(t_min, t_max, E, spectrogram_array):
     # Plot spectrogram
@@ -373,18 +365,17 @@ class GaussianSpectrum(SpectrumGenerator):
         
         amplitudes = self.amplitude * np.exp(-((momenta-p_peak)**2)/(2*dw**2))
 
-        # plot 
-        fig, ax = plt.subplots(figsize = (30, 21))
-        ax.plot(momenta, amplitudes)
-        ax.set_xlabel('Momentum (eV)')
-        ax.set_ylabel(r'$\phi(0)$')
-
-        print('saving initial waveform...')
-        plt.savefig(f'waveform_plot_initial_gaussian.pdf', dpi=300)
-        plt.close()
-        
         return momenta, amplitudes
 
+def plot_waveform(filename, momenta, amplitudes):
+    fig, ax = plt.subplots(figsize = (30, 21))
+    ax.plot(momenta, amplitudes)
+    ax.set_xlabel('Momentum (eV)')
+    ax.set_ylabel(r'$\phi(0)$')
+    
+    plt.savefig(filename, dpi=300)
+    plt.close()
+        
 def generate_spectrum(config):
     if config.spectrum_type == 'bosenova':
         return BosenovaSpectrum(config.bosenova_path, config.mass, num_points=3000)
@@ -393,7 +384,7 @@ def generate_spectrum(config):
     else:
         raise ValueError(f"Unknown spectrum type: {config.spectrum_type}")
 
-def run_propagation(config, N_points_spectrogram, delta_t_s=None, N_time_steps=None):
+def run_propagation(config, N_points_spectrogram, delta_t_s=None, N_time_steps=None, save_waveform=False):
     # Reading density profile from CSV file
     x, rho = read_medium_data(config.density_profile_path, i_R=0, i_rho=2)
     
@@ -406,6 +397,7 @@ def run_propagation(config, N_points_spectrogram, delta_t_s=None, N_time_steps=N
     # Generate spectrum
     spectrum_generator = generate_spectrum(config)
     momenta, amplitudes = spectrum_generator.generate()
+    if save_waveform: plot_waveform('waveform_plot_initial_gaussian.pdf', momenta, amplitudes)
     spectrum = [momenta, amplitudes]
 
     # Run propagation
@@ -418,6 +410,9 @@ def run_propagation(config, N_points_spectrogram, delta_t_s=None, N_time_steps=N
                                                                    N_points_spectrogram,
                                                                    delta_t_s, 
                                                                    N_time_steps)
+    
+    # Save waveform
+    if save_waveform: plot_final_waveform('waveform_plot.pdf', t_duration, phi_signal)
     
     return t_duration, N_points, E, spectrogram
 
@@ -466,7 +461,7 @@ if __name__ == '__main__':
         width=width
     )
     
-    time_dependent = False
+    time_dependent = True
     
     if time_dependent:
         N_time_steps = 20
@@ -493,7 +488,11 @@ if __name__ == '__main__':
         for i, config in enumerate(gaussian_configs):
             delta_t_s = [i * burst_duration_gaussian * SEC_TO_INEV, 
                          (i + 1) * burst_duration_gaussian * SEC_TO_INEV] 
-            t_duration, N_points, E, spectrogram = run_propagation(config, N_points_spectrogram, delta_t_s, N_time_steps)
+            t_duration, N_points, E, spectrogram = run_propagation(config, 
+                                                                   N_points_spectrogram, 
+                                                                   delta_t_s, 
+                                                                   N_time_steps, 
+                                                                   save_waveform=True)
             t_durations.append(t_duration)
             N_points_array.append(N_points)
             E_array.append(E)
