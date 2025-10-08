@@ -30,10 +30,6 @@ class Spectrum:
                 raise ValueError('Experiment must be provided when using a source.')
             self._compute_derived_quantities(source, experiment)
             self.coupling_probe = coupling_probe(source.Etot, source.tstar, source.R, self.w, source.mass, experiment.sensitivity, aw=1, t_int=experiment.integration_time, t_int_DM=experiment.integration_time_DM, coupling_type=source.coupling_type, coupling_order=source.coupling_order, axion=self.is_axion)
-            
-    def load_from_csv(self, file):
-        # Load spectrum data from file
-        raise NotImplementedError('To be implemented...')
     
     def generate_model(self, source):
         """Create a synthetic spectrum from a source model.
