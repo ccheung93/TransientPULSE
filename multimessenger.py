@@ -26,11 +26,7 @@ def get_distance_label(R):
 
 def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename):
     """ Plots for linear coupling_order """
-    if R < 1e5:
-        plot_E_unc(ax, E_unc, 1e-20, 1e-2)
-    else:
-        plot_E_unc(ax, E_unc, E_unc/200, 1e-1)
-    
+    plot_E_unc(ax, E_unc)
     plot_MICROSCOPE(ax, Elist, Microscope_m)
     plot_FifthForce(ax, Elist, FifthForce_m)
     plot_coupling(ax, Elist, coupling)
@@ -54,12 +50,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
 
 def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename):
     """ Plots for quadratic coupling_order """
-    y_label = {
-        'photon': 3e29,
-        'electron': 3e29,
-        'gluon': 3e26
-    }[coupling_type]
-    plot_E_unc(ax, E_unc, 1e-19, y_label)
+    plot_E_unc(ax, E_unc)
     if m > 1e-20:
         plot_mass_exclusion(ax, m)
         label_mass_exclusion(ax, m/200, 1e12, facecolor='whitesmoke')
@@ -104,7 +95,7 @@ def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_scre
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
     plot_parameter_list(ax, i, j, coupling_type, 'quad', filename)
 
-def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=True):
+def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=False):
     """Generate dilatonic coupling plots 
 
     Args:
@@ -207,15 +198,7 @@ if __name__ == "__main__":
     # Galactic
     R_GC = 1e4
     E_GC = 1e-2
-    
-    # computations
-    # Inputs:
-    #   density profile
-    #   spectrum emitted by source, e.g. momentum spectrum
-    #   experimental properties, e.g. sensitivity, t_int
-    
-    # plot
-    
+
     start_time = time.time()
     for i in coupling_types:
         for j in coupling_orders:
