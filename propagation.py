@@ -322,7 +322,11 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
         # d2 = -------------- [ E^2 ( 1 - ------------ ) - m^2 ]
         #       8*pi*rho_ISM               (1+dt/R)^2
         #
-        coupling = prefactor * (E**2/q**2 - m**2)/(RHO_ISM*K)
+        # Handle division by zero safely
+        with np.errstate(divide='ignore', invalid='ignore'):
+            coupling = prefactor * (E**2/q**2 - m**2)/(RHO_ISM*K)
+            # Set coupling to inf where denominator is zero (physically means strong coupling limit)
+            coupling = np.where(np.isfinite(coupling), coupling, np.inf)
     else:
         # ISM+IGM regime:
         #          M_pl^2                     2E^2*dt/R - m^2
@@ -332,7 +336,9 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
         Ng_eff = Ng**(1/3) + 1
         numer = 2*E**2*dt_c/R_meters - m**2
         denom = Ng_eff*Dg/R*RHO_ISM*K + (1-(Ng_eff*Dg/R))*RHO_IGM*K
-        coupling = prefactor * numer / denom
+        with np.errstate(divide='ignore', invalid='ignore'):
+            coupling = prefactor * numer / denom
+            coupling = np.where(np.isfinite(coupling), coupling, np.inf)
     return coupling
 
 def coupling_critical(E, R, rho, m, K):
