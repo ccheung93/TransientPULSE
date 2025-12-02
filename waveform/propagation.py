@@ -111,10 +111,10 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     start_index = ((t_start - t_fastest_absolute) /(delta_t_duration)).astype(int)
     stop_index = ((t_end- t_fastest_absolute) / (delta_t_duration)).astype(int)
 
-    # TODO - check R dependence
     for i, (start, stop, p_a, A_a, E_a) in enumerate(zip(start_index, stop_index, p_avg, A_avg, E_avg)):
         time_window = t_duration[start:stop]
-        spectrogram_array[i][start:stop] += 0.5 * (E_a**2) * (A_a/R)**2
+        time_duration_mode = (time_window[-1] - time_window[0]) / SEC_TO_INEV
+        spectrogram_array[i][start:stop] += 0.5 * (E_a**2) * (A_a/R)**2 * (ts_sec/time_duration_mode)
         phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
         phi_t_final[start:stop] +=  phi
 
@@ -158,7 +158,7 @@ def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, valid=None, filename='spectrogram_plot.pdf'):
+def plot_spectrogram(N_points, t_duration, t_min, t_max, E, spectrogram_array, valid=None, filename='spectrogram_plot.pdf'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -188,18 +188,20 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, valid=None, f
     plt.rcParams.update({'font.size': 40, 'font.family': 'STIXGeneral'})
 
     fig, ax5 = plt.subplots(figsize = (30, 21))
+    X, Y = np.meshgrid(t_duration, freq_plot)
     cmap_name = 'viridis'
     cmap = plt.colormaps[cmap_name]
     rgb = plt.colormaps[cmap_name](0)
     cmap.set_bad(rgb)
     masked_data = np.ma.masked_where(spectrogram_plot <= 0, spectrogram_plot)
 
-    im = ax5.imshow(masked_data,
-                    aspect="auto",
-                    origin="lower",
-                    extent = [t_min, t_max, freq_plot[0], freq_plot[-1]],
-                    norm=mcolors.LogNorm(),
-                    cmap=cmap)
+    im = ax5.pcolormesh(X, Y,
+                        masked_data,
+                        shading='nearest',
+                        norm=mcolors.LogNorm(),
+                        cmap=cmap,
+                        rasterized = True)
+    
     cbar = fig.colorbar(im, label=r"$\rho_*~[{\rm eV}^4]$")
     cbar.ax.tick_params(labelsize=40)
     cbar.set_label(r"$\rho_*~[{\rm eV}^4]$", fontsize=40)
