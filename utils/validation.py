@@ -52,6 +52,135 @@ def validate_positive_float(value, param_name, units):
     return value_float
 
 
+def validate_non_negative_float(value, param_name, units):
+    """Validate that a parameter is a non-negative number (>= 0)
+
+    Args:
+        value: The value to validate
+        param_name (str): Name of the parameter for error messages
+        units (str): Physical units for error messages
+
+    Returns:
+        float: The validated value as a float
+
+    Raises:
+        TypeError: If value is not numeric
+        ValueError: If value is negative
+    """
+    if value is None:
+        raise TypeError(
+            f"{param_name} cannot be None. "
+            f"Expected a non-negative number in {units}."
+        )
+
+    try:
+        value_float = float(value)
+    except (TypeError, ValueError):
+        raise TypeError(
+            f"{param_name} must be a number, got {type(value).__name__}. "
+            f"Expected a non-negative number in {units}.\n"
+            f"Example: {param_name}=1.0"
+        )
+
+    if value_float < 0:
+        raise ValueError(
+            f"{param_name} must be non-negative, got {value_float}. "
+            f"Expected a non-negative number in {units}.\n"
+            f"Example: {param_name}=1.0"
+        )
+
+    return value_float
+
+
+def validate_float_in_range(value, param_name, units, min_val=None, max_val=None):
+    """Validate that a parameter is a number within a specified range
+
+    Args:
+        value: The value to validate
+        param_name (str): Name of the parameter for error messages
+        units (str): Physical units for error messages
+        min_val (float, optional): Minimum allowed value (inclusive)
+        max_val (float, optional): Maximum allowed value (inclusive)
+
+    Returns:
+        float: The validated value as a float
+
+    Raises:
+        TypeError: If value is not numeric
+        ValueError: If value is outside the specified range
+    """
+    if value is None:
+        raise TypeError(
+            f"{param_name} cannot be None. "
+            f"Expected a number in {units}."
+        )
+
+    try:
+        value_float = float(value)
+    except (TypeError, ValueError):
+        raise TypeError(
+            f"{param_name} must be a number, got {type(value).__name__}. "
+            f"Expected a number in {units}.\n"
+            f"Example: {param_name}=1.0"
+        )
+
+    if min_val is not None and value_float < min_val:
+        raise ValueError(
+            f"{param_name} must be >= {min_val}, got {value_float}. "
+            f"Expected a number in {units}.\n"
+            f"Example: {param_name}={min_val}"
+        )
+
+    if max_val is not None and value_float > max_val:
+        raise ValueError(
+            f"{param_name} must be <= {max_val}, got {value_float}. "
+            f"Expected a number in {units}.\n"
+            f"Example: {param_name}={max_val}"
+        )
+
+    return value_float
+
+
+def validate_choice(value, param_name, valid_options):
+    """Validate that a string parameter is one of the valid choices
+
+    Args:
+        value: The value to validate
+        param_name (str): Name of the parameter for error messages
+        valid_options (set or list): Valid choices for the parameter
+
+    Returns:
+        str: The validated value
+
+    Raises:
+        TypeError: If value is not a string
+        ValueError: If value is not in valid_options
+
+    Examples:
+        >>> validate_choice('scalar', 'ULB_type', {'scalar', 'ALP'})
+        'scalar'
+        >>> validate_choice('electron', 'coupling_type', {'electron', 'photon'})
+        'electron'
+    """
+    if not isinstance(value, str):
+        valid_list = sorted(list(valid_options)) if isinstance(valid_options, set) else valid_options
+        raise TypeError(
+            f"{param_name} must be a string, got {type(value).__name__}.\n"
+            f"Valid options: {valid_options}\n"
+            f"Example: {param_name}='{valid_list[0]}'"
+        )
+
+    if value not in valid_options:
+        valid_list = sorted(list(valid_options)) if isinstance(valid_options, set) else valid_options
+        raise ValueError(
+            f"{param_name} '{value}' is not valid.\n"
+            f"Valid options: {valid_options}\n"
+            f"Example: {param_name}='{valid_list[0]}'"
+        )
+
+    return value
+
+
 def validate_dict_structure(value, param_name, key_type=str, value_type=float,
                            allow_empty=False, value_validator=None):
     """Validate dictionary structure and contents
