@@ -31,6 +31,46 @@ class WaveformCollection:
         x_interp, rho_interp = interpolate_data(x, rho, self.propagation.density_num_points)
         self.density_profile = [x_interp, rho_interp]
 
+    def _compute_global_time_range(self, num_steps):
+        """
+        Compute global time range across all emission windows for aligned spectrograms
+
+        Args:
+            num_steps (int): Number of time steps
+
+        Returns:
+            tuple: (t_min, t_max) in natural units [1/eV]
+        """
+        from propagation import propagation_time
+        from constants import SEC_TO_INEV
+
+        # Get first spectrum to determine energy range
+        spectrum = self.spectrum_source.get_spectrum(0)
+        p, A = spectrum
+        m = self.physics.mass
+        E = np.sqrt(m**2 + p**2)
+
+        # Calculate propagation times for all energies
+        x, rho = self.density_profile
+        t_arrivals = np.array([propagation_time(m, E_i, x, rho, self.physics.K, self.physics.coupling) for E_i in E])
+
+        # Get min and max arrival times
+        t_min_prop = np.min(t_arrivals)
+        t_max_prop = np.max(t_arrivals)
+
+        # Add emission time windows
+        t_min_global = t_min_prop
+        t_max_global = t_max_prop
+
+        for i in range(num_steps):
+            time_window = self.spectrum_source.get_time_window(i)
+            if time_window is not None:
+                # Arrival time = propagation time + emission time
+                t_min_global = min(t_min_global, t_min_prop + time_window[0])
+                t_max_global = max(t_max_global, t_max_prop + time_window[1])
+
+        return (t_min_global, t_max_global)
+
     def propagate_all(self, N_points_spectrogram, save_waveform=True):
         """
         Propagate all time steps
@@ -51,14 +91,19 @@ class WaveformCollection:
 
         num_steps = self.spectrum_source.get_num_time_steps()
 
+        # For time-varying spectra, pre-compute global time range for aligned spectrograms
+        global_time_range = None
+        if num_steps > 1:
+            global_time_range = self._compute_global_time_range(num_steps)
+
         # Clear previous results
         self.results = []
 
         for i in range(num_steps):
             spectrum = self.spectrum_source.get_spectrum(i)
             time_window = self.spectrum_source.get_time_window(i)
-
-            result = self._propagate_single(spectrum, time_window, N_points_spectrogram, num_steps, save_waveform)
+            result = self._propagate_single(spectrum, time_window, N_points_spectrogram, num_steps,
+                                           save_waveform, global_time_range)
             self.results.append(result)
 
         return self._aggregate_results(N_points_spectrogram)
@@ -145,7 +190,8 @@ class WaveformCollection:
         end_time = time.time()
         logger.info(f'Saved waveform_plot.pdf in {end_time - start_time:.2f}s')
 
-    def _propagate_single(self, spectrum, time_window, N_points_spectrogram, N_time_steps, save_waveform=True):
+    def _propagate_single(self, spectrum, time_window, N_points_spectrogram, N_time_steps,
+                          save_waveform=True, global_time_range=None):
         """
         Propagate a single spectrum snapshot
 
@@ -155,6 +201,7 @@ class WaveformCollection:
             N_points_spectrogram (int): Number of points for spectrogram
             N_time_steps (int): Total number of time steps
             save_waveform (bool): If True, save waveform plot
+            global_time_range (tuple, optional): (t_min, t_max) for aligned spectrograms
 
         Returns:
             dict: Results with keys 't_duration', 'phi_signal', 'N_points', 'E', 'spectrogram'
@@ -177,7 +224,8 @@ class WaveformCollection:
             N_points_spectrogram,
             delta_t_s,
             N_time_steps,
-            save_waveform
+            save_waveform,
+            global_time_range
         )
 
         return {

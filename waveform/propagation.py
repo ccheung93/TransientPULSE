@@ -16,7 +16,7 @@ from utils.logging_utils import get_logger
 logger = get_logger()
 
 def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=None,
-                time_step_range=None, N_time_steps=None, save_waveform=True):
+                time_step_range=None, N_time_steps=None, save_waveform=True, global_time_range=None):
     """
     Propagate scalar field waveforms through a galactic density profile.
 
@@ -31,9 +31,10 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         K (float): fraction of energy density from a particular particle [dimensionless]
         ts_sec (float): burst duration in seconds
         N_points_spectrogram (int, optional): Number of points for spectrogram
-        time_step_range (tuple, optional): (t_start, t_end) for time window
+        time_step_range (tuple, optional): (t_start, t_end) for emission time window at source
         N_time_steps (int, optional): Number of time steps
         save_waveform (bool): If True, save waveform plot to 'waveform_plot.pdf'
+        global_time_range (tuple, optional): (t_min, t_max) global time range for aligned spectrograms
 
     Returns:
         tuple: (t_duration, phi_signal, N_points, E, spectrogram, valid)
@@ -60,7 +61,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     # Density profile
     x, rho = density_profile
-    R = x[-1] # distance from the Earth to Galactic center [kpc] TODO - parametrize this
+    R = x[-1] - x[0] # distance from the Earth to Galactic center [kpc] TODO - parameterize this
 
     t_arrivals = np.array([propagation_time(m, E_i, x, rho, K, d) for E_i in E])
     t_fastest_absolute = np.min(t_arrivals)
@@ -77,11 +78,20 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         # Looking at part of the waveform that arrives in the lifetime of the experiment, e.g. the tail of the spectrum
         valid = np.where((t_arrivals - t_fastest_absolute) <= t_exp_ineV)[0]
 
-    # Define valid time window
-    delta_t_s = [time_step / N_time_steps for time_step in time_step_range] if time_step_range else [0, ts_eV]
+    # Define emission time window at source
+    # time_step_range already contains the specific time window for this emission step
+    delta_t_s = time_step_range if time_step_range else [0, ts_eV]
     logger.debug(f"delta_t_s: {delta_t_s[0]} to {delta_t_s[-1]} s")
-    t_fastest = np.min(t_arrivals[valid]) + delta_t_s[0]
-    t_slowest = np.max(t_arrivals[valid]) + delta_t_s[1]
+
+    # Use global time range if provided (for time-varying emissions), otherwise compute locally
+    if global_time_range is not None:
+        t_fastest, t_slowest = global_time_range
+        logger.debug(f"Using global time range: {t_fastest} to {t_slowest}")
+    else:
+        t_fastest = np.min(t_arrivals[valid]) + delta_t_s[0]
+        t_slowest = np.max(t_arrivals[valid]) + delta_t_s[1]
+        logger.debug(f"Computed local time range: {t_fastest} to {t_slowest}")
+
     t_d = t_slowest - t_fastest
     logger.debug(f"Arrival time: {(t_fastest/SEC_TO_INEV)/3e7:.6f} years")
 
@@ -107,9 +117,9 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_start = t_arrivals[i1] + delta_t_s[0]     # Defined by fastest momentum mode in the momentum bin
     t_end = t_arrivals[i0] + delta_t_s[1]       # Defined by the slowest momentum mode in the bin
 
-    # Indices in the time array
-    start_index = ((t_start - t_fastest_absolute) /(delta_t_duration)).astype(int)
-    stop_index = ((t_end- t_fastest_absolute) / (delta_t_duration)).astype(int)
+    # Indices in the time array using searchsorted for robust index finding
+    start_index = np.searchsorted(t_duration, t_start, side='left')
+    stop_index = np.searchsorted(t_duration, t_end, side='right')
 
     for i, (start, stop, p_a, A_a, E_a) in enumerate(zip(start_index, stop_index, p_avg, A_avg, E_avg)):
         time_window = t_duration[start:stop]
@@ -158,7 +168,7 @@ def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_duration, t_min, t_max, E, spectrogram_array, valid=None, filename='spectrogram_plot.pdf'):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, valid=None, filename='spectrogram_plot.pdf'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -178,6 +188,7 @@ def plot_spectrogram(N_points, t_duration, t_min, t_max, E, spectrogram_array, v
     logger.debug(f'Time range: [{t_min:.2e}, {t_max:.2e}] s')
 
     freq = E*SEC_TO_INEV/(2*PI)
+    t_duration = np.linspace(t_min, t_max, N_points)
 
     # Plot full spectrogram with full frequency range (like old code)
     # valid is used during propagation but we plot everything

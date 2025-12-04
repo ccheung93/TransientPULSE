@@ -71,14 +71,33 @@ def example_new_architecture_time_varying():
     )
 
     # Create time-varying wrapper with Gaussian amplitude profile
-    N_time_steps = 20
+    N_time_steps = 5
     amplitude_profile = [np.exp(-(i - N_time_steps/2)**2 / (N_time_steps/3)**2)
                          for i in range(N_time_steps)]
 
     # Define time windows for each step
-    time_windows = [(i * burst_duration * SEC_TO_INEV, (i + 1) * burst_duration * SEC_TO_INEV)
+    time_windows = [(i * burst_duration * SEC_TO_INEV / N_time_steps, (i + 1) * burst_duration * SEC_TO_INEV / N_time_steps)
                     for i in range(N_time_steps)]
-
+    
+    # Print emission details
+    base_amplitude = base_gaussian.params.get('amplitude', 1.0)
+    logger.info(f"\nEmission Configuration:")
+    logger.info(f"  Number of time steps: {N_time_steps}")
+    logger.info(f"  Burst duration: {burst_duration:.3e} s")
+    logger.info(f"  Base amplitude: {base_amplitude:.3e}")
+    logger.info(f"\nTime-varying emission schedule:")
+    for i in range(N_time_steps):
+        amp_factor = amplitude_profile[i]
+        effective_amp = base_amplitude * amp_factor
+        t_start = time_windows[i][0] / SEC_TO_INEV  # Convert to seconds
+        t_end = time_windows[i][1] / SEC_TO_INEV
+        energy_density_factor = amp_factor**2
+        logger.info(f"  Step {i}:")
+        logger.info(f"    Amplitude factor: {amp_factor:.4f}")
+        logger.info(f"    Effective amplitude: {effective_amp:.3e}")
+        logger.info(f"    Energy density factor: {energy_density_factor:.4f} ({energy_density_factor:.2e})")
+        logger.info(f"    Emission time window: [{t_start:.3e}, {t_end:.3e}] s")
+        
     time_varying = TimeVaryingSpectrum(base_gaussian, amplitude_profile, time_windows)
 
     # Configure and propagate
@@ -89,8 +108,7 @@ def example_new_architecture_time_varying():
     results = collection.propagate_all(N_points_spectrogram=2000, save_waveform=False)
 
     # Plot spectrogram
-    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
-                     results['E'], results['spectrogram'], results['valid'])
+    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'], results['E'], results['spectrogram'], results['valid'])
 
     logger.info(f"Time-varying propagation complete with {N_time_steps} steps")
     return results
@@ -156,13 +174,13 @@ def example_new_architecture_csv():
     # Load bosenova spectrum from file (no header, space-separated)
     # Use num_points=3000 for interpolation to match old implementation
     spectrum = CSVSpectrum('Spectra/BosonStarSpectrumRelOnly.txt',
-                           i_p=0, i_A=1, skip_header=False, num_points=3000)
+                           i_p=0, i_A=1, skip_header=False, num_points=1000)
 
     # The file contains dimensionless values - need to scale properly
     # Following old code normalization: momenta * mass, amplitudes * sqrt(1/1e-85)
     momenta, amplitudes = spectrum.get_spectrum()
     scaled_momenta = momenta * mass
-    scaled_amplitudes = np.sqrt(amplitudes * (1/1e-85))  # Match old BosenovaSpectrum normalization
+    scaled_amplitudes = np.sqrt(amplitudes * (1/1e-85) / spectrum.num_points)  # Match old BosenovaSpectrum normalization
 
     # Create a wrapper class to return scaled values
     class ScaledSpectrum(SpectrumSource):
@@ -201,7 +219,7 @@ if __name__ == '__main__':
     setup_logging(log_file='propagation.log', level='INFO')
 
     # Uncomment the example you want to run:
-    # example_new_architecture_single_gaussian()
-    # example_new_architecture_time_varying()
+    #example_new_architecture_single_gaussian()
+    example_new_architecture_time_varying()
     # example_new_architecture_composite()
-    example_new_architecture_csv()
+    # example_new_architecture_csv()
