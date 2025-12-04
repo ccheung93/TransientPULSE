@@ -166,7 +166,7 @@ class AnalyticSpectrum(SpectrumSource):
         p_final = peak_momentum + width * np.sqrt(2 * np.log(10))
         momenta = np.linspace(p_initial, p_final, self.num_points)
 
-        amplitudes = amplitude * np.exp(-((momenta - peak_momentum)**2) / (2 * width**2))
+        amplitudes = amplitude * np.exp(-((momenta - peak_momentum)**2) / (2 * width**2)) / np.sqrt(self.num_points)
 
         return momenta, amplitudes
 
