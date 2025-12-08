@@ -26,9 +26,8 @@ def read_medium_data(filename, i_R=0, i_rho=1):
             # Ensure we have enough columns
             if len(parts) > max(i_R, i_rho):
                 try:
-                    # Convert position and density
-                    x.append(float(parts[i_R]) * KPC_TO_INEV)
-                    rho.append(float(parts[i_rho]) * GCM3_TO_EV4)
+                    x.append(float(parts[i_R]))
+                    rho.append(float(parts[i_rho]))
                 except (ValueError, IndexError):
                     continue  # Skip invalid lines
 
@@ -36,21 +35,21 @@ def read_medium_data(filename, i_R=0, i_rho=1):
 
 
 def interpolate_data(x, y, num):
-    """Interpolates data with logarithmic spacing
+    """Interpolates data with linearly spacing
 
-    Creates logarithmically-spaced interpolation points between the first and last
+    Creates linearly-spaced interpolation points between the first and last
     x values, then linearly interpolates the y values at these points.
 
     Args:
-        x (array): Input x values (must be positive for log spacing)
+        x (array): Input x values (must be positive for linear spacing)
         y (array): Input y values corresponding to x
         num (int): Number of points for interpolation
 
     Returns:
         tuple: (xnew, ynew) - Interpolated x and y arrays with num points each
     """
-    # Create logarithmically-spaced x values
-    xnew = np.logspace(np.log10(x[0]), np.log10(x[-1]), num)
+    # Create linearly-spaced x values
+    xnew = np.linspace(x[0], x[-1], num)
 
     # Interpolate y values at new x positions
     f = scipy.interpolate.interp1d(x, y, kind='linear', fill_value='extrapolate')
