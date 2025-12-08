@@ -416,3 +416,15 @@ def propagation_time(m, E, x, rho, K, coupling):
     vg_avg = 0.5 * (v_g_inv[:-1] + v_g_inv[1:])
 
     return np.sum(vg_avg * dx)
+
+def propagation_time_GW(R):
+    """ Calculates propagation time for gravitational wave (GW)
+    
+    Args:
+        R (float): distance between GW source and detector
+    
+    Returns:
+        float: total propagation time [1/eV]
+    """
+    return R
+
