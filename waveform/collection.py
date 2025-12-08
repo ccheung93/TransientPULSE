@@ -7,6 +7,7 @@ waveforms through a galactic density profile.
 
 import numpy as np
 from utils.data_utils import read_medium_data, interpolate_data
+from constants import KPC_TO_INEV, GCM3_TO_EV4
 
 
 class WaveformCollection:
@@ -25,11 +26,38 @@ class WaveformCollection:
         self.results = []
         self.density_profile = None
 
-    def _load_density_profile(self):
-        """Load and interpolate density profile"""
+    def _load_density_profile(self, xi=None, xf=None):
+        """
+        Load and interpolate density profile then select a range
+        
+        Args:
+            xi (float): initial density profile position
+            xf (float): final density profile position
+        
+        Returns:
+            ([np.ndarray, np.ndarray]): Density profile (x=position, y=density at position)
+        """
         x, rho = read_medium_data(self.propagation.density_profile_path, i_R=0, i_rho=2)
         x_interp, rho_interp = interpolate_data(x, rho, self.propagation.density_num_points)
-        self.density_profile = [x_interp, rho_interp]
+
+        if (xi is None) or (xf is None):
+            return ValueError('Include both xi and xf if defining range for density profile.')
+        
+        if xi is not None and xi < x[0]:
+            return ValueError('xi precedes initial position value in inputted density profile.')
+        
+        if xf is not None and xf > x[-1]:
+            return ValueError('xf exceeds final position value in inputted density profile.')
+
+        if xi is not None and xf is not None:
+            mask = np.where((x_interp >= xi) & (x_interp <= xf))
+            x_interp = x_interp[mask]
+            rho_interp = rho_interp[mask]
+        
+        x_interp = x_interp* KPC_TO_INEV
+        rho_interp = rho_interp * GCM3_TO_EV4
+        
+        self.density_profile = [x_interp, rho_interp]            
 
     def _compute_global_time_range(self, num_steps):
         """
@@ -71,19 +99,22 @@ class WaveformCollection:
 
         return (t_min_global, t_max_global)
 
-    def propagate_all(self, N_points_spectrogram, save_waveform=True):
+    def propagate_all(self, N_points_spectrogram, xi=None, xf=None, save_waveform=True):
         """
         Propagate all time steps
 
         Args:
             N_points_spectrogram (int): Number of points for spectrogram output
+            xi (float): initial density profile position
+            xf (float): final density profile position
             save_waveform (bool): If True, save waveform plots for each time step
 
         Returns:
             dict: Aggregated results with keys 't_duration', 'spectrogram', 'E'
         """
         if self.density_profile is None:
-            self._load_density_profile()
+            print(f'Loading density profile... selecting range between x_i={xi} and x_f={xf}')
+            self._load_density_profile(xi=xi, xf=xf)
 
         # Check if this is a composite spectrum that should be propagated independently
         if hasattr(self.spectrum_source, 'get_independent_sources'):

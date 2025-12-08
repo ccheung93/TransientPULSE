@@ -61,7 +61,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     # Density profile
     x, rho = density_profile
-    R = x[-1] - x[0] # distance from the Earth to Galactic center [kpc] TODO - parameterize this
+    R = x[-1] - x[0]
 
     t_arrivals = np.array([propagation_time(m, E_i, x, rho, K, d) for E_i in E])
     t_fastest_absolute = np.min(t_arrivals)
@@ -95,8 +95,8 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_d = t_slowest - t_fastest
     logger.debug(f"Arrival time: {(t_fastest/SEC_TO_INEV)/3e7:.6f} years")
 
-    N_points = min(int(2*t_d * np.max(E[valid]/(2*np.pi))), 1e4)
-    logger.debug(f"Calculated N_points={int(2*t_d * np.max(E[valid]/(2*np.pi)))}, using N_points={N_points}")
+    N_points = 1e4
+
 
     t_duration = np.linspace(t_fastest, t_slowest, int(N_points_spectrogram))
     t_duration_Earth_s = (t_duration - t_fastest_absolute)/SEC_TO_INEV
