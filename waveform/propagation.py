@@ -168,7 +168,7 @@ def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, valid=None, filename='spectrogram_plot.pdf'):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spectrogram_plot.pdf'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -178,7 +178,6 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, valid=None, f
         t_max (float): Maximum time [s]
         E (np.ndarray): Energy array [eV]
         spectrogram_array (np.ndarray): 2D array (energy × time) of energy density
-        valid (np.ndarray, optional): Valid frequency mask (unused, kept for compatibility)
         filename (str): Output filename for plot
     """
     start_time = time.time()
