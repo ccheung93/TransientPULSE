@@ -117,11 +117,8 @@ class WaveformCollection:
             print(f'Loading density profile... selecting range between x_i={xi} and x_f={xf}')
             self._load_density_profile(xi=xi, xf=xf)
 
-        # Check if this is a composite spectrum that should be propagated independently
-        if hasattr(self.spectrum_source, 'get_independent_sources'):
-            return self._propagate_composite(N_points_spectrogram, save_waveform)
-
         num_steps = self.spectrum_source.get_num_time_steps()
+        print(f'Propagating {num_steps} time steps')
 
         # For time-varying spectra, pre-compute global time range for aligned spectrograms
         global_time_range = None

@@ -14,7 +14,7 @@ from utils.logging_utils import setup_logging, get_logger
 from waveform.collection import WaveformCollection
 from waveform.propagation import plot_spectrogram
 
-def example_new_architecture_single_gaussian():
+def example_new_architecture_single_gaussian(filename=None):
     """Example: Single static Gaussian spectrum using new architecture"""
     logger = get_logger()
     logger.info("\n=== Example 1: Single Static Gaussian ===")
@@ -45,13 +45,13 @@ def example_new_architecture_single_gaussian():
 
     # Plot spectrogram
     plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
-                     results['E'], results['spectrogram'], results['valid'])
+                     results['E'], results['spectrogram'], filename=filename)
 
     logger.info("Single Gaussian propagation complete. Spectrogram saved.")
     return results
 
 
-def example_new_architecture_time_varying():
+def example_new_architecture_time_varying(filename=None):
     """Example: Time-varying Gaussian with amplitude modulation"""
     logger = get_logger()
     logger.info("\n=== Example 2: Time-Varying Gaussian ===")
@@ -107,13 +107,13 @@ def example_new_architecture_time_varying():
     results = collection.propagate_all(N_points_spectrogram=2000, save_waveform=False)
 
     # Plot spectrogram
-    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'], results['E'], results['spectrogram'])
+    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'], results['E'], results['spectrogram'], filename=filename)
 
     logger.info(f"Time-varying propagation complete with {N_time_steps} steps")
     return results
 
 
-def example_bosenova_csv():
+def example_bosenova_csv(filename=None):
     """Example: Load spectrum from CSV file (Bosenova spectrum)"""
     logger = get_logger()
     logger.info("\n=== Example 3: CSV Spectrum (Bosenova) ===")
@@ -130,7 +130,7 @@ def example_bosenova_csv():
     # Following old code normalization: momenta * mass, amplitudes * sqrt(1/1e-85)
     momenta, amplitudes = spectrum.get_spectrum()
     scaled_momenta = momenta * mass
-    scaled_amplitudes = np.sqrt(amplitudes * (1/1e-85) / spectrum.num_points)  # Match old BosenovaSpectrum normalization
+    scaled_amplitudes = np.sqrt(amplitudes * (1/1e-85))  # TODO - define this
 
     # Create a wrapper class to return scaled values
     class ScaledSpectrum(SpectrumSource):
@@ -154,7 +154,7 @@ def example_bosenova_csv():
 
     # Plot spectrogram
     plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
-                     results['E'], results['spectrogram'], cutoff_min=0.8e7, cutoff_max=1.5e7)
+                     results['E'], results['spectrogram'], filename=filename)
 
     logger.info("CSV (Bosenova) spectrum propagation complete. Spectrogram saved.")
     return results
@@ -169,6 +169,6 @@ if __name__ == '__main__':
     setup_logging(log_file='propagation.log', level='INFO')
 
     # Uncomment the example you want to run:
-    # example_new_architecture_single_gaussian()
-    # example_new_architecture_time_varying()
-    example_bosenova_csv()
+    example_new_architecture_single_gaussian(filename='spectrogram_single_gaussian.pdf')
+    example_new_architecture_time_varying(filename='spectrogram_time_varying.pdf')
+    example_bosenova_csv(filename='spectrogram_bosenova.pdf')

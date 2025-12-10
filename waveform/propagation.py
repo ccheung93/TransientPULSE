@@ -67,7 +67,6 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     t_arrivals = np.array([propagation_time(m, E_i, x, rho, K, d) for E_i in E])
     t_fastest_absolute = propagation_time_GW(R)
-    t_slowest = np.max(t_arrivals) + ts_eV
 
     valid1 = True
     spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
@@ -90,8 +89,8 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         t_fastest, t_slowest = global_time_range
         logger.debug(f"Using global time range: {t_fastest} to {t_slowest}")
     else:
-        t_fastest = np.min(t_arrivals[valid]) + delta_t_s[0]
-        t_slowest = np.max(t_arrivals[valid]) + delta_t_s[1]
+        t_fastest = t_fastest_absolute
+        t_slowest = np.max(t_arrivals) + ts_eV
         logger.debug(f"Computed local time range: {t_fastest} to {t_slowest}")
 
     t_d = t_slowest - t_fastest
@@ -237,7 +236,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
     ax_x.xaxis.set_tick_params(labelbottom=False)
     ax_y.yaxis.set_tick_params(labelleft=False)
     
-    ax_x.plot(t_duration[(t_duration >= cutoff_min) & (t_duration <= cutoff_max)], rho_t, linewidth = 6,linestyle = '-',color = 'tab:blue')
+    ax_x.plot(t_duration[(t_duration <= cutoff_max)], rho_t, linewidth = 6,linestyle = '-',color = 'tab:blue')
     ax_x.plot([t_min, t_max],[rho_t_avg, rho_t_avg],linewidth = 6,linestyle = '--',color = 'tab:red')
     
     rho_t_min_nonzero = rho_t[np.where(rho_t > 0)].min()
@@ -276,8 +275,8 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     mask = (t_duration >= cutoff_min) & (t_duration <= cutoff_max)
     spectrogram = spectrogram[:, mask]
     
-    rho_t = np.sum(spectrogram, axis=0)
-    rho_f = np.sum(spectrogram, axis=1)
+    rho_t = np.sum(spectrogram, axis=0) / len(freq)
+    rho_f = np.sum(spectrogram, axis=1) / len(spectrogram)
     
     rho_f_norm = rho_f/sum(rho_f)
     f_avg = np.sum(freq * rho_f_norm)
@@ -285,5 +284,6 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     rho_t_avg = np.mean(rho_t)
     std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm))
     print(f'frequency standard deviation = {std_f}')
+    print(f'{max(rho_t)}, {max(rho_f)}')
     
     return rho_t, rho_f_norm, rho_t_avg, f_avg, std_f
