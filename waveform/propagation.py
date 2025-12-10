@@ -9,8 +9,10 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import mpl_toolkits as mpl
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from constants import *
-from propagation import propagation_time
+from propagation import propagation_time, propagation_time_GW
 from utils.logging_utils import get_logger
 
 logger = get_logger()
@@ -64,7 +66,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     R = x[-1] - x[0]
 
     t_arrivals = np.array([propagation_time(m, E_i, x, rho, K, d) for E_i in E])
-    t_fastest_absolute = np.min(t_arrivals)
+    t_fastest_absolute = propagation_time_GW(R)
     t_slowest = np.max(t_arrivals) + ts_eV
 
     valid1 = True
@@ -134,7 +136,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     # Optionally save waveform plot
     if save_waveform:
         plot_waveform(t_duration_Earth_s, phi_t_final, filename='waveform_plot.pdf')
-
+        
     return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array, valid
 
 
@@ -197,7 +199,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
     plt.rcParams['mathtext.fontset'] = 'cm'
     plt.rcParams.update({'font.size': 40, 'font.family': 'STIXGeneral'})
 
-    fig, ax5 = plt.subplots(figsize = (30, 21))
+    fig, ax = plt.subplots(figsize = (30, 21))
     X, Y = np.meshgrid(t_duration, freq_plot)
     cmap_name = 'viridis'
     cmap = plt.colormaps[cmap_name]
@@ -205,7 +207,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
     cmap.set_bad(rgb)
     masked_data = np.ma.masked_where(spectrogram_plot <= 0, spectrogram_plot)
 
-    im = ax5.pcolormesh(X, Y,
+    im = ax.pcolormesh(X, Y,
                         masked_data,
                         shading='nearest',
                         norm=mcolors.LogNorm(),
@@ -216,9 +218,41 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
     cbar.ax.tick_params(labelsize=40)
     cbar.set_label(r"$\rho_*~[{\rm eV}^4]$", fontsize=40)
 
-    ax5.set_xlabel("Time (s)", fontsize=40)
-    ax5.set_ylabel(r"Frequency $f$ [Hz]", fontsize=40)
-    ax5.tick_params(labelsize=40)
+    ax.set_xlabel("Time (s)", fontsize=40)
+    ax.set_ylabel(r"Frequency $f$ [Hz]", fontsize=40)
+    ax.tick_params(labelsize=40)
+    
+    # Calculate densities
+    cutoff = 1e8
+    rho_t, rho_f, rho_t_avg, f_avg, std_f = calc_densities(t_duration, spectrogram_array, freq, cutoff)
+
+    # Plot densities
+    divider = mpl.axes_grid1.make_axes_locatable(ax)
+    # below height and pad are in inches
+    ax_x = divider.append_axes("top", 4, pad=0.1, sharex=ax)
+    ax_y = divider.append_axes("right", 4, pad=0.1, sharey=ax)
+    
+    # make some labels invisible
+    ax_x.xaxis.set_tick_params(labelbottom=False)
+    ax_y.yaxis.set_tick_params(labelleft=False)
+    
+    ax_x.plot(t_duration[t_duration < cutoff], rho_t, linewidth = 6,linestyle = '-',color = 'tab:blue')
+    ax_x.plot([t_min, t_max],[rho_t_avg, rho_t_avg],linewidth = 6,linestyle = '--',color = 'tab:red')
+    
+    rho_t_min_nonzero = rho_t[np.where(rho_t > 0)].min()
+    rho_t_max = rho_t.max()
+    
+    ax_x.set_yscale('log')
+    ax_x.set_ylim(rho_t_min_nonzero,rho_t_max*10)
+    ax_x.set_ylabel(r'$\rho(t)$')
+    
+    # ax_y.plot(y)
+    ax_y.plot(rho_f,freq,linewidth = 6,linestyle = '-',color = 'tab:blue')
+    ax_y.plot([0,rho_f.max()*2],[f_avg,f_avg],linewidth = 6,linestyle = '--',color = 'tab:red')
+    ax_y.fill_between([0,rho_f.max()*2],[f_avg - std_f,f_avg - std_f],[f_avg + std_f,f_avg + std_f], color = 'tab:red',alpha = 0.2)
+    ax_y.set_xscale('log')
+    ax_y.set_xlabel(r'$\rho(f)$')
+    
 
     plt.tight_layout()
     plt.savefig(filename)
@@ -226,3 +260,25 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
 
     end_time = time.time()
     logger.info(f"Saved {filename} in {end_time - start_time:.2f}s")
+
+
+def calc_densities(t_duration, spectrogram, freq, cutoff):
+    """
+    
+    """
+    
+    # Select portion of spectrogram within cutoff
+    mask = t_duration <= cutoff
+    spectrogram = spectrogram[:, mask]
+    
+    rho_t = np.sum(spectrogram, axis=0)
+    rho_f = np.sum(spectrogram, axis=1)
+    
+    rho_f_norm = rho_f/sum(rho_f)
+    f_avg = np.sum(freq * rho_f_norm)
+    w_avg = 2*PI*f_avg/SEC_TO_INEV
+    rho_t_avg = np.mean(rho_t)
+    std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm))
+    print(f'frequency standard deviation = {std_f}')
+    
+    return rho_t, rho_f_norm, rho_t_avg, f_avg, std_f
