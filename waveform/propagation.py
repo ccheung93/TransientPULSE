@@ -170,7 +170,7 @@ def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spectrogram_plot.pdf'):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = None, cutoff_max = None, filename='spectrogram_plot.pdf'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -223,8 +223,9 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
     ax.tick_params(labelsize=40)
     
     # Calculate densities
-    cutoff = 1e8
-    rho_t, rho_f, rho_t_avg, f_avg, std_f = calc_densities(t_duration, spectrogram_array, freq, cutoff)
+    cutoff_min = cutoff_min if cutoff_min else 0
+    cutoff_max = cutoff_max if cutoff_max else t_max
+    rho_t, rho_f, rho_t_avg, f_avg, std_f = calc_densities(t_duration, spectrogram_array, freq, cutoff_min, cutoff_max)
 
     # Plot densities
     divider = mpl.axes_grid1.make_axes_locatable(ax)
@@ -236,7 +237,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
     ax_x.xaxis.set_tick_params(labelbottom=False)
     ax_y.yaxis.set_tick_params(labelleft=False)
     
-    ax_x.plot(t_duration[t_duration < cutoff], rho_t, linewidth = 6,linestyle = '-',color = 'tab:blue')
+    ax_x.plot(t_duration[(t_duration >= cutoff_min) & (t_duration <= cutoff_max)], rho_t, linewidth = 6,linestyle = '-',color = 'tab:blue')
     ax_x.plot([t_min, t_max],[rho_t_avg, rho_t_avg],linewidth = 6,linestyle = '--',color = 'tab:red')
     
     rho_t_min_nonzero = rho_t[np.where(rho_t > 0)].min()
@@ -262,13 +263,17 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, filename='spe
     logger.info(f"Saved {filename} in {end_time - start_time:.2f}s")
 
 
-def calc_densities(t_duration, spectrogram, freq, cutoff):
+def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=None):
     """
     
     """
+    
+    # Default cutoff values
+    cutoff_min = cutoff_min if cutoff_min else 0
+    cutoff_max = cutoff_max if cutoff_max else t_duration[-1]
     
     # Select portion of spectrogram within cutoff
-    mask = t_duration <= cutoff
+    mask = (t_duration >= cutoff_min) & (t_duration <= cutoff_max)
     spectrogram = spectrogram[:, mask]
     
     rho_t = np.sum(spectrogram, axis=0)

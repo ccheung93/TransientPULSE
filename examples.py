@@ -2,14 +2,13 @@
 Examples demonstrating the new architecture for waveform propagation.
 
 This file contains example usage of the WaveformCollection API with various
-spectrum sources: single Gaussian, time-varying, composite, and CSV (bosenova).
+spectrum sources: single Gaussian, time-varying, and CSV (bosenova).
 """
 
 import numpy as np
 from constants import SEC_TO_INEV, KPC_TO_INEV, GCM3_TO_EV4
 from utils.data_utils import read_medium_data, interpolate_data
-from inputs.spectrum_sources import (SpectrumSource, CSVSpectrum, AnalyticSpectrum,
-                                      TimeVaryingSpectrum, CompositeSpectrum, plot_spectrum)
+from inputs.spectrum_sources import (SpectrumSource, CSVSpectrum, AnalyticSpectrum, TimeVaryingSpectrum)
 from inputs.configs import PhysicsConfig, PropagationConfig
 from utils.logging_utils import setup_logging, get_logger
 from waveform.collection import WaveformCollection
@@ -155,7 +154,7 @@ def example_bosenova_csv():
 
     # Plot spectrogram
     plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
-                     results['E'], results['spectrogram'])
+                     results['E'], results['spectrogram'], cutoff_min=0.8e7, cutoff_max=1.5e7)
 
     logger.info("CSV (Bosenova) spectrum propagation complete. Spectrogram saved.")
     return results
