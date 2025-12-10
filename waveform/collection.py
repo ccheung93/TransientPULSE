@@ -8,7 +8,7 @@ waveforms through a galactic density profile.
 import numpy as np
 from utils.data_utils import read_medium_data, interpolate_data
 from constants import KPC_TO_INEV, GCM3_TO_EV4
-
+from propagation import propagation_time_GW
 
 class WaveformCollection:
     """Container for managing single or multiple waveforms"""
@@ -39,8 +39,8 @@ class WaveformCollection:
         """
         x, rho = read_medium_data(self.propagation.density_profile_path, i_R=0, i_rho=2)
         x_interp, rho_interp = interpolate_data(x, rho, self.propagation.density_num_points)
-
-        if (xi is None) or (xf is None):
+        
+        if (xi is None and xf is not None) or (xf is None and xi is not None):
             return ValueError('Include both xi and xf if defining range for density profile.')
         
         if xi is not None and xi < x[0]:
@@ -83,7 +83,8 @@ class WaveformCollection:
         t_arrivals = np.array([propagation_time(m, E_i, x, rho, self.physics.K, self.physics.coupling) for E_i in E])
 
         # Get min and max arrival times
-        t_min_prop = np.min(t_arrivals)
+        R = x[-1] - x[0]
+        t_min_prop = propagation_time_GW(R)
         t_max_prop = np.max(t_arrivals)
 
         # Add emission time windows
