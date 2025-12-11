@@ -1,7 +1,7 @@
 import numpy as np
 from constants import * 
 
-def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC): 
+def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, rho=None): 
     """ Calculate the energy density of phi at the Earth and timing rescaling factor calculated for a spectrum
     
     Args:
@@ -36,7 +36,7 @@ def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_S
     total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
     
     # Compute energy density of phi at Earth
-    rho = calc_rho(Etot, R, total_wave_spread)
+    rho = rho if rho else calc_rho(Etot, R, total_wave_spread)
     
     # Compute rescaling factor (fraction in Eq. 46 in arXiv:2502.08716v1)
     tau_star = calc_tau_star(m_phi, q, dw, R, t_star)

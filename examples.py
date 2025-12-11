@@ -12,7 +12,7 @@ from inputs.spectrum_sources import (SpectrumSource, CSVSpectrum, AnalyticSpectr
 from inputs.configs import PhysicsConfig, PropagationConfig
 from utils.logging_utils import setup_logging, get_logger
 from waveform.collection import WaveformCollection
-from waveform.propagation import plot_spectrogram
+from waveform.propagation import plot_spectrogram, export_source_parameters
 
 def example_new_architecture_single_gaussian(filename=None):
     """Example: Single static Gaussian spectrum using new architecture"""
@@ -44,10 +44,15 @@ def example_new_architecture_single_gaussian(filename=None):
     results = collection.propagate_all(N_points_spectrogram=2000)
 
     # Plot spectrogram
-    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
+    avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("Single Gaussian propagation complete. Spectrogram saved.")
+    
+    # Export source parameters
+    R = collection.density_profile[0][-1] - collection.density_profile[0][0]
+    export_source_parameters(avg_density, burst_duration, R, mass, True, 'gaussian.param')
+    
     return results
 
 
@@ -70,7 +75,7 @@ def example_new_architecture_time_varying(filename=None):
     )
 
     # Create time-varying wrapper with Gaussian amplitude profile
-    N_time_steps = 5
+    N_time_steps = 20
     amplitude_profile = [np.exp(-(i - N_time_steps/2)**2 / (N_time_steps/3)**2)
                          for i in range(N_time_steps)]
 
@@ -107,9 +112,14 @@ def example_new_architecture_time_varying(filename=None):
     results = collection.propagate_all(N_points_spectrogram=2000, save_waveform=False)
 
     # Plot spectrogram
-    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'], results['E'], results['spectrogram'], filename=filename)
+    avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'], results['E'], results['spectrogram'], filename=filename)
 
     logger.info(f"Time-varying propagation complete with {N_time_steps} steps")
+    
+    # Export source parameters
+    R = collection.density_profile[0][-1] - collection.density_profile[0][0]
+    export_source_parameters(avg_density, burst_duration, R, mass, True, 'gaussian_tv.param')
+    
     return results
 
 
@@ -153,10 +163,15 @@ def example_bosenova_csv(filename=None):
     results = collection.propagate_all(N_points_spectrogram=2000, save_waveform=False)
 
     # Plot spectrogram
-    plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
+    avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("CSV (Bosenova) spectrum propagation complete. Spectrogram saved.")
+    
+    # Export source parameters
+    R = collection.density_profile[0][-1] - collection.density_profile[0][0]
+    export_source_parameters(avg_density, burst_duration, R, mass, True, 'bosenova.param')
+    
     return results
 
 if __name__ == '__main__':

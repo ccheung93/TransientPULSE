@@ -58,7 +58,6 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     # Spectrum
     p, A = spec
-    del spec
     E = np.sqrt(m**2 + p**2)
 
     # Density profile
@@ -103,8 +102,6 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_duration_Earth_s = (t_duration - t_fastest_absolute)/SEC_TO_INEV
 
     phi_t_final = np.zeros(len(t_duration))
-
-    delta_t_duration = t_d/len(t_duration)
 
     # Define indices for all bin starts
     i0 = valid[:-2]
@@ -260,6 +257,16 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
 
     end_time = time.time()
     logger.info(f"Saved {filename} in {end_time - start_time:.2f}s")
+    
+    return rho_t_avg
+
+
+def export_source_parameters(avg_density, burst_duration, R, mass, to_file=False, filename=None):    
+    if to_file:
+        filename = filename if filename else 'source.params'
+        with open(filename, 'w') as f:
+            f.write(f'AVG_DENSITY={avg_density}\nBURST_DURATION={burst_duration}\nDISTANCE={R}\nMASS={mass}')
+    print(f'AVG_DENSITY={avg_density}\nBURST_DURATION={burst_duration}\nDISTANCE={R}\nMASS={mass}')
 
 
 def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=None):
