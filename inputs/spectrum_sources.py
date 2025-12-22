@@ -207,59 +207,6 @@ class TimeVaryingSpectrum(SpectrumSource):
         return None
 
 
-class CompositeSpectrum(SpectrumSource):
-    """Combine multiple spectrum sources (e.g., multiple emission lines)
-
-    For composite spectra with well-separated emission lines, each source is
-    propagated independently and the spectrograms are combined. This avoids
-    creating artificial bins between separated peaks.
-    """
-
-    def __init__(self, spectrum_sources):
-        """
-        Args:
-            spectrum_sources (list of SpectrumSource): List of spectrum sources to combine
-        """
-        self.sources = spectrum_sources
-
-        # Check that all sources have the same number of time steps
-        num_steps = [src.get_num_time_steps() for src in self.sources]
-        if len(set(num_steps)) > 1:
-            raise ValueError("All spectrum sources must have the same number of time steps")
-        self.num_time_steps = num_steps[0]
-
-    def get_spectrum(self, time_index=None):
-        """Combine spectra from all sources"""
-        all_momenta = []
-        all_amplitudes = []
-
-        for source in self.sources:
-            momenta, amplitudes = source.get_spectrum(time_index)
-            all_momenta.append(momenta)
-            all_amplitudes.append(amplitudes)
-
-        # Concatenate all spectra
-        combined_momenta = np.concatenate(all_momenta)
-        combined_amplitudes = np.concatenate(all_amplitudes)
-
-        # Sort by momentum
-        sort_idx = np.argsort(combined_momenta)
-
-        return combined_momenta[sort_idx], combined_amplitudes[sort_idx]
-
-    def get_num_time_steps(self):
-        """Returns number of time steps"""
-        return self.num_time_steps
-
-    def get_time_window(self, time_index):
-        """Returns time window from first source"""
-        return self.sources[0].get_time_window(time_index)
-
-    def get_independent_sources(self):
-        """Return list of independent sources for separate propagation"""
-        return self.sources
-
-
 def plot_spectrum(spectrum_source, time_index=None, filename='spectrum_initial.pdf',
                   xlabel='Momentum (eV)', ylabel='Amplitude', title=None):
     """
@@ -275,7 +222,7 @@ def plot_spectrum(spectrum_source, time_index=None, filename='spectrum_initial.p
     """
     momenta, amplitudes = spectrum_source.get_spectrum(time_index)
 
-    fig, ax = plt.subplots(figsize=(30, 21))
+    _, ax = plt.subplots(figsize=(30, 21))
     plt.rcParams['mathtext.fontset'] = 'cm'
     plt.rcParams.update({'font.size': 35, 'font.family': 'STIXGeneral'})
     plt.tight_layout()
