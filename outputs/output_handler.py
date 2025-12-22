@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from inputs.source import Source
-from inputs.spectrum import Spectrum
+from inputs.spectrum import SignalModel
 from plots import *
 
 class OutputHandler:
@@ -37,7 +37,7 @@ class OutputHandler:
 
         Args:
             sources (Source or list[list[Source]]): Either a single Source object or a 2D list of Source objects
-            spectra (Spectrum or list[list[Spectrum]]): Either a single Spectrum object or a 2D list of Spectrum objects
+            spectra (SignalModel or list[list[SignalModel]]): Either a single SignalModel object or a 2D list of SignalModel objects
             plot (Plot): Plot object containing plot configurations.
             save_path (str, optional): If provided, saves the figure to this path. Defaults to None.
         """
@@ -76,7 +76,7 @@ class OutputHandler:
 
         Args:
             sources (list[list[Source]]): 2D list of Source objects
-            spectra (list[list[Spectrum]]): 2D list of Spectrum objects
+            spectra (list[list[SignalModel]]): 2D list of SignalModel objects
             plot (Plot): Plot object containing plot configurations.
         """
         for i in range(self.nrows):
@@ -93,13 +93,13 @@ class OutputHandler:
                     
                 ax.tick_params(axis='both', which='both', labelsize=25)
         
-    def _plot_single_panel(self, ax, source: Source, spectrum: Spectrum, plot: Plot):
+    def _plot_single_panel(self, ax, source: Source, spectrum: SignalModel, plot: Plot):
         """Plot a single panel of the parameter space.
 
         Args:
             ax (matplotlib.axes.Axes): Axis to plot on.
             source (Source): Source object containing source parameters.
-            spectrum (Spectrum): Spectrum object containing computed quantities.
+            spectrum (SignalModel): SignalModel object containing computed quantities.
             plot (Plot): Plot object containing plot configurations.
         """
         x = spectrum.w
@@ -122,13 +122,13 @@ class OutputHandler:
         setup_axes(ax, self.xlims, self.ylims)
         setup_axis_labels(self.fig, source.coupling_order, source.coupling_type)
         
-    def _plot_exclusions(self, ax, source: Source, spectrum: Spectrum, plot: Plot):
+    def _plot_exclusions(self, ax, source: Source, spectrum: SignalModel, plot: Plot):
         """Plot exclusion contraints on the parameter space.
 
         Args:
             ax (matplotlib.axes.Axes): Axis to plot on.
             source (Source): Source object containing source parameters.
-            spectrum (Spectrum): Spectrum object containing constraints and limits.
+            spectrum (SignalModel): SignalModel object containing constraints and limits.
             plot (Plot): Plot object containing plot configurations.
         """
         plot_E_unc(ax, spectrum.E_unc)
@@ -143,13 +143,13 @@ class OutputHandler:
             # TODO plot_MICROSCOPE(ax, spectrum.w)
             pass
     
-    def _plot_couplings(self, ax, x, spectrum: Spectrum, plot: Plot):
+    def _plot_couplings(self, ax, x, spectrum: SignalModel, plot: Plot):
         """Plot the coupling curve and time delay lines.
 
         Args:
             ax (matplotlib.axes.Axes): Axis to plot on.
             x (np.ndarray): Energy array.
-            spectrum (Spectrum): Spectrum object containing computed couplings.
+            spectrum (SignalModel): SignalModel object containing computed couplings.
             plot (Plot): Plot object containing plot configurations.
         """
         plot_coupling(ax, x, spectrum.coupling_probe, label='coupling')
@@ -166,7 +166,7 @@ class OutputHandler:
 
         Args:
             ax (matplotlib.axes.Axes): Axis to plot on.
-            spectrum (Spectrum): Spectrum object containing energies and computed couplings.
+            spectrum (SignalModel): SignalModel object containing energies and computed couplings.
         """
         mask = spectrum.w > spectrum.E_unc
         fill_x = spectrum.w[mask]

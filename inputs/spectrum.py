@@ -3,11 +3,11 @@ from propagation import *
 from inputs.source import Source
 from inputs.experiment import Experiment
 
-class Spectrum:
-    """Class representing an emission spectrum."""
+class SignalModel:
+    """Class representing an emission signal model for constraint calculations."""
 
     def __init__(self, file: str = None, source: Source = None, experiment: Experiment = None, aw: float = 1):
-        """Initialize a spectrum from either a file or a source model
+        """Initialize a signal model from either a file or a source model
 
         Args:
             file (str, optional): Path to CSV file containing spectrum data. Defaults to None.
@@ -44,8 +44,8 @@ class Spectrum:
             raise ValueError(
                 "Must specify either 'file' or 'source'.\n"
                 "Examples:\n"
-                "  - Spectrum(file='path/to/spectrum.csv')\n"
-                "  - Spectrum(source=Source(...), experiment=Experiment(...))"
+                "  - SignalModel(file='path/to/spectrum.csv')\n"
+                "  - SignalModel(source=Source(...), experiment=Experiment(...))"
             )
 
         # Validate source type if provided
