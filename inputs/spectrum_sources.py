@@ -44,7 +44,8 @@ class SpectrumSource:
 class CSVSpectrum(SpectrumSource):
     """Load spectrum from CSV file"""
 
-    def __init__(self, filepath, i_p=0, i_A=1, skip_header=True, separator=None, num_points=None):
+    def __init__(self, filepath, i_p=0, i_A=1, skip_header=True, separator=None, num_points=None,
+                 scaled_momentum=1.0, scaled_amplitude=1.0):
         """
         Args:
             filepath (str): Path to CSV file
@@ -53,6 +54,8 @@ class CSVSpectrum(SpectrumSource):
             skip_header (bool): Whether to skip the first line (default True)
             separator (str): Separator character (None = auto-detect comma vs whitespace)
             num_points (int, optional): If specified, interpolate to this many points
+            scaled_momentum (float or callable): Scale factor for momentum, or function to apply
+            scaled_amplitude (float or callable): Scale factor for amplitude, or function to apply
         """
         self.filepath = filepath
         self.i_p = i_p
@@ -60,6 +63,8 @@ class CSVSpectrum(SpectrumSource):
         self.skip_header = skip_header
         self.separator = separator
         self.num_points = num_points
+        self.scaled_momentum = scaled_momentum
+        self.scaled_amplitude = scaled_amplitude
         self.momenta, self.amplitudes = self._load_data()
 
     def _load_data(self):
@@ -95,6 +100,17 @@ class CSVSpectrum(SpectrumSource):
         # Apply interpolation if num_points is specified
         if self.num_points is not None:
             x_array, y_array = interpolate_data(x_array, y_array, self.num_points)
+
+        # Apply scaling
+        if callable(self.scaled_momentum):
+            x_array = self.scaled_momentum(x_array)
+        else:
+            x_array = x_array * self.scaled_momentum
+
+        if callable(self.scaled_amplitude):
+            y_array = self.scaled_amplitude(y_array)
+        else:
+            y_array = y_array * self.scaled_amplitude
 
         return x_array, y_array
 
