@@ -61,7 +61,7 @@ class OutputHandler:
         if isinstance(self.axs, np.ndarray):
             # Get handles and labels from the first subplot with valid data
             for ax in self.axs.flat:
-                handles, labels = self.axs[0, 0].get_legend_handles_labels()
+                handles, labels = ax.get_legend_handles_labels()
                 if handles:
                     break
         else:
@@ -132,11 +132,20 @@ class OutputHandler:
             plot (Plot): Plot object containing plot configurations.
         """
         plot_E_unc(ax, spectrum.E_unc)
-        if not plot.include_legend:
-            label_E_unc(ax, 5e-17, 1e-8)
+        e_unc_pos = plot.label_positions.get('E_unc')
+        if e_unc_pos is not None:
+            label_E_unc(ax, E_unc=spectrum.E_unc, pos_x=e_unc_pos[0], pos_y=e_unc_pos[1])
+        else:
+            label_E_unc(ax, E_unc=spectrum.E_unc)  # Auto-position near E_unc line
+
         if self.xlims[0] < source.mass:
             plot_mass_exclusion(ax, source.mass)
-            label_mass_exclusion(ax)
+            mass_pos = plot.label_positions.get('mass_exclusion')
+            if mass_pos is not None:
+                label_mass_exclusion(ax, pos_x=mass_pos[0], pos_y=mass_pos[1])
+            else:
+                label_mass_exclusion(ax)
+
         if source.ULB_type == 'ALP':
             plot_constraint(ax, spectrum.constraint, source.coupling_type)
         else:

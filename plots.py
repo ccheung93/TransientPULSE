@@ -38,13 +38,31 @@ class Plot:
         'bbox_to_anchor': (1.0, 1.0),
         'title_fontsize': 32
     }
-    
-    def __init__(self, xlims, ylims, exclude_mass=False, include_legend=True, legend_config=None):
+
+    DEFAULT_LABEL_POSITIONS = {
+        'E_unc': None,
+        'mass_exclusion': None,
+    }
+
+    def __init__(self, xlims, ylims, exclude_mass=False, include_legend=True,
+                 legend_config=None, label_positions=None):
+        """
+        Args:
+            xlims (tuple): X-axis limits (min, max)
+            ylims (tuple): Y-axis limits (min, max)
+            exclude_mass (bool): Whether to exclude mass region
+            include_legend (bool): Whether to include legend
+            legend_config (dict, optional): Legend configuration
+            label_positions (dict, optional): Custom label positions.
+                Format: {'E_unc': (x, y), 'mass_exclusion': (x, y)}
+                Use None for auto-positioning
+        """
         self.xlims = xlims
         self.ylims = ylims
         self.exclude_mass = exclude_mass
         self.include_legend = include_legend
         self.legend_config = {**self.DEFAULT_LEGEND_CONFIG, **(legend_config or {})}
+        self.label_positions = {**self.DEFAULT_LABEL_POSITIONS, **(label_positions or {})}
         self.handles = []
         self.labels = []
 
@@ -168,9 +186,28 @@ def plot_E_unc(ax, E_unc, color='chocolate'):
     # Shade in the region up to E_unc
     ax.axvspan(1e-100, E_unc, color = color, alpha = 0.1)
 
-def label_E_unc(ax, pos_x, pos_y, fontsize=35, color='tab:brown'):
-    if pos_x and pos_y:
-        add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize = fontsize, color = color) 
+def label_E_unc(ax, E_unc=None, pos_x=None, pos_y=None, fontsize=35, color='tab:brown'):
+    """Label the energy uncertainty exclusion region
+
+    Args:
+        ax: Matplotlib axis
+        E_unc (float, optional): Energy uncertainty value. Used for auto-positioning near the exclusion line
+        pos_x (float, optional): X position. If None, auto-position near E_unc line
+        pos_y (float, optional): Y position. If None, auto-position at bottom
+        fontsize (int): Font size
+        color (str): Text color
+    """
+    if pos_x is None:
+        if E_unc is not None:
+            pos_x = E_unc / 3
+        else:
+            xmin, xmax = ax.get_xlim()
+            pos_x = xmin * 5
+    if pos_y is None:
+        ymin, ymax = ax.get_ylim()
+        pos_y = ymin * 100
+
+    add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize=fontsize, color=color) 
     
 def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=35, color='black'):
     """ Plot the astrophysical constraint"""
