@@ -180,8 +180,8 @@ class OutputHandler:
         mask = spectrum.w > spectrum.E_unc
         fill_x = spectrum.w[mask]
         fill_y = np.minimum(
-            np.full_like(fill_x, spectrum.constraint), 
-            np.maximum.reduce(list(spectrum.coupling_time_delays.values()))[mask]
+            np.full_like(fill_x, spectrum.constraint),
+            np.minimum.reduce(list(spectrum.coupling_time_delays.values()))[mask]
         )
         plot_fill_region(ax, fill_x, fill_y, spectrum.coupling_probe[mask])
         
