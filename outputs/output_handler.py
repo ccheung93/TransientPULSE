@@ -47,7 +47,7 @@ class OutputHandler:
         else:
             self._plot_single_panel(self.axs, sources, spectra, plot)
             setup_title(self.axs, rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {np.log10(sources.mass):.0f}$')
-            setup_time_label(self.axs, rf'$t_*$ = {sources.tstar} s', padding=40)
+            setup_time_label(self.axs, rf'$t_*$ = {sources.tstar:g} s', padding=40)
         
         if plot.include_legend:
             self._add_shared_legend(plot)
@@ -89,7 +89,7 @@ class OutputHandler:
                 if i == 0:
                     setup_title(ax, rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {np.log10(source.mass):.0f}$')
                 if j == self.ncols - 1:
-                    setup_time_label(ax, rf'$t_*$ = {source.tstar} s', padding=40)
+                    setup_time_label(ax, rf'$t_*$ = {source.tstar:g} s', padding=40)
                     
                 ax.tick_params(axis='both', which='both', labelsize=25)
         
