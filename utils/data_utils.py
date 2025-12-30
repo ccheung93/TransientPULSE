@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.interpolate
-from constants import KPC_TO_INEV, GCM3_TO_EV4
+from utils.constants import KPC_TO_INEV, GCM3_TO_EV4
 
 def read_medium_data(filename, i_R=0, i_rho=1):
     """Read density (g/cm^3) vs. position (kpc) data from CSV file

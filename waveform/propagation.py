@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import mpl_toolkits as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from constants import *
-from propagation import propagation_time, propagation_time_GW
+from utils.constants import *
+from calculations.constraints import propagation_time, propagation_time_GW
 from utils.logging_utils import get_logger
 
 logger = get_logger()
@@ -261,12 +261,181 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
     return rho_t_avg
 
 
-def export_source_parameters(avg_density, burst_duration, R, mass, to_file=False, filename=None):    
+def export_source_parameters(avg_density, burst_duration, R, mass, coupling=None, K=None,
+                              coupling_type='photon', coupling_order='linear',
+                              to_file=False, filename=None):
+    """Export source parameters for use in constraint plotting workflow
+
+    Args:
+        avg_density (float): Average energy density [eV^4]
+        burst_duration (float): Burst duration [s]
+        R (float): Distance [eV^-1 in natural units]
+        mass (float): Scalar field mass [eV]
+        coupling (float, optional): Dilatonic coupling strength [dimensionless]
+        K (float, optional): Energy density fraction
+        coupling_type (str): Type of coupling ('photon', 'electron', 'gluon')
+        coupling_order (str): Coupling order ('linear' or 'quad')
+        to_file (bool): Whether to save to file
+        filename (str, optional): Output filename
+
+    Returns:
+        dict: Dictionary of source parameters
+    """
+    from utils.constants import PC_TO_INEV, SOLAR_TO_EV, SEC_TO_INEV
+    import numpy as np
+
+    # Convert units for constraint plotting
+    R_pc = R / PC_TO_INEV  # Convert from eV^-1 to parsecs
+    tstar_sec = burst_duration  # Already in seconds
+
+    # Calculate total energy from avg_density if available
+    # E_tot = rho * Volume * duration
+    # Volume ~ 4π R^2 * c * t_star (for spherical expansion)
+    # In natural units: Volume ~ 4π R^2 * t_star
+    if avg_density is not None and R is not None and burst_duration is not None:
+        burst_duration_nu = burst_duration * SEC_TO_INEV  # Convert to natural units
+        volume_nu = 4 * np.pi * R**2 * burst_duration_nu  # Natural units
+        Etot_eV = avg_density * volume_nu
+        Etot_solar = Etot_eV / SOLAR_TO_EV
+    else:
+        Etot_solar = None
+
+    params = {
+        'MASS': mass,
+        'DISTANCE': R_pc,
+        'BURST_DURATION': tstar_sec,
+        'ENERGY': Etot_solar,
+        'COUPLING': coupling,
+        'K': K,
+        'COUPLING_TYPE': coupling_type,
+        'COUPLING_ORDER': coupling_order,
+        'AVG_DENSITY': avg_density
+    }
+
     if to_file:
         filename = filename if filename else 'source.params'
         with open(filename, 'w') as f:
-            f.write(f'AVG_DENSITY={avg_density}\nBURST_DURATION={burst_duration}\nDISTANCE={R}\nMASS={mass}')
-    print(f'AVG_DENSITY={avg_density}\nBURST_DURATION={burst_duration}\nDISTANCE={R}\nMASS={mass}')
+            for key, value in params.items():
+                if value is not None:
+                    f.write(f'{key}={value}\n')
+
+    # Print summary
+    print("Source Parameters:")
+    for key, value in params.items():
+        if value is not None:
+            print(f'{key}={value}')
+
+    return params
+
+
+def create_source_from_propagation(avg_density, burst_duration, R, mass,
+                                     coupling_type='photon', coupling_order='linear',
+                                     ULB_type='scalar'):
+    """Create a Source object from waveform propagation results
+
+    This is a bridge function between the waveform propagation workflow (Part 1)
+    and the constraint plotting workflow (Part 2).
+
+    Args:
+        avg_density (float): Average energy density [eV^4]
+        burst_duration (float): Burst duration [s]
+        R (float): Distance [eV^-1 in natural units]
+        mass (float): Scalar field mass [eV]
+        coupling_type (str): Type of coupling ('photon', 'electron', 'gluon')
+        coupling_order (str): Coupling order ('linear' or 'quad')
+        ULB_type (str): Type of ultralight boson ('scalar' or 'ALP')
+
+    Returns:
+        Source: Source object ready for constraint plotting
+
+    Example:
+        >>> # After waveform propagation
+        >>> results = collection.propagate_all(N_points_spectrogram=2000)
+        >>> R = collection.density_profile[0][-1] - collection.density_profile[0][0]
+        >>> avg_density = plot_spectrogram(...)
+        >>>
+        >>> # Create Source for constraint plotting
+        >>> source = create_source_from_propagation(
+        ...     avg_density, physics.burst_duration, R, physics.mass,
+        ...     coupling_type='photon', coupling_order='linear'
+        ... )
+    """
+    from inputs.source import Source
+    from utils.constants import PC_TO_INEV, SOLAR_TO_EV, SEC_TO_INEV
+    import numpy as np
+
+    # Convert units
+    R_pc = R / PC_TO_INEV
+    tstar_sec = burst_duration
+
+    # Calculate total energy
+    burst_duration_nu = burst_duration * SEC_TO_INEV
+    volume_nu = 4 * np.pi * R**2 * burst_duration_nu
+    Etot_eV = avg_density * volume_nu
+    Etot_solar = Etot_eV / SOLAR_TO_EV
+
+    # Create and return Source object
+    source = Source(
+        Etot=Etot_solar,
+        mass=mass,
+        tstar=tstar_sec,
+        R=R_pc,
+        ULB_type=ULB_type,
+        coupling_type=coupling_type,
+        coupling_order=coupling_order
+    )
+
+    return source
+
+
+def load_source_from_file(filename='source.params', ULB_type='scalar'):
+    """Load a Source object from parameter file created by export_source_parameters
+
+    Args:
+        filename (str): Path to parameter file
+        ULB_type (str): Type of ultralight boson ('scalar' or 'ALP')
+
+    Returns:
+        Source: Source object ready for constraint plotting
+
+    Example:
+        >>> # After exporting parameters
+        >>> source = load_source_from_file('bosenova.param')
+    """
+    from inputs.source import Source
+    import os
+
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"Parameter file '{filename}' not found")
+
+    params = {}
+    with open(filename, 'r') as f:
+        for line in f:
+            if '=' in line:
+                key, value = line.strip().split('=')
+                try:
+                    params[key] = float(value)
+                except ValueError:
+                    params[key] = value  # Keep as string if not numeric
+
+    # Extract required parameters
+    required = ['MASS', 'DISTANCE', 'BURST_DURATION', 'ENERGY', 'COUPLING_TYPE', 'COUPLING_ORDER']
+    missing = [key for key in required if key not in params]
+    if missing:
+        raise ValueError(f"Missing required parameters in file: {missing}")
+
+    # Create Source object
+    source = Source(
+        Etot=params['ENERGY'],
+        mass=params['MASS'],
+        tstar=params['BURST_DURATION'],
+        R=params['DISTANCE'],
+        ULB_type=ULB_type,
+        coupling_type=params['COUPLING_TYPE'],
+        coupling_order=params['COUPLING_ORDER']
+    )
+
+    return source
 
 
 def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=None):

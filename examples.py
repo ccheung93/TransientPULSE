@@ -6,7 +6,7 @@ spectrum sources: single Gaussian, time-varying, and CSV (bosenova).
 """
 
 import numpy as np
-from constants import SEC_TO_INEV, KPC_TO_INEV, GCM3_TO_EV4
+from utils.constants import SEC_TO_INEV, KPC_TO_INEV, GCM3_TO_EV4
 from utils.data_utils import read_medium_data, interpolate_data
 from inputs.spectrum_sources import (SpectrumSource, CSVSpectrum, AnalyticSpectrum, TimeVaryingSpectrum)
 from inputs.configs import PhysicsConfig, PropagationConfig

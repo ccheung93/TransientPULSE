@@ -1,5 +1,5 @@
 import numpy as np
-from constants import * 
+from utils.constants import * 
 
 def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, rho=None): 
     """ Calculate the energy density of phi at the Earth and timing rescaling factor calculated for a spectrum

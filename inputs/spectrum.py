@@ -1,5 +1,6 @@
 import numpy as np
-from propagation import *
+from calculations.constraints import *
+from utils.constants import *
 from inputs.source import Source
 from inputs.experiment import Experiment
 

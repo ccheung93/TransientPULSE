@@ -1,4 +1,4 @@
-from propagation import SOLAR_TO_EV
+from utils.constants import SOLAR_TO_EV
 from utils.validation import validate_positive_float, validate_choice
 
 

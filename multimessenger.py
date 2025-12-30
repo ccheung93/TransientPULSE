@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-from propagation import *
-from limits import *
-from plots import *
+from calculations.constraints import *
+from utils.constants import *
+from plotting.limits import *
+from plotting.plots import *
 
 def get_distance_label(R):
     """ Returns distance scale label for a given value in parsecs 

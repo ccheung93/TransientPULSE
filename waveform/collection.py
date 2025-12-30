@@ -7,8 +7,8 @@ waveforms through a galactic density profile.
 
 import numpy as np
 from utils.data_utils import read_medium_data, interpolate_data
-from constants import KPC_TO_INEV, GCM3_TO_EV4
-from propagation import propagation_time_GW
+from utils.constants import KPC_TO_INEV, GCM3_TO_EV4
+from calculations.constraints import propagation_time_GW
 
 class WaveformCollection:
     """Container for managing single or multiple waveforms"""
@@ -69,8 +69,7 @@ class WaveformCollection:
         Returns:
             tuple: (t_min, t_max) in natural units [1/eV]
         """
-        from propagation import propagation_time
-        from constants import SEC_TO_INEV
+        from calculations.constraints import propagation_time
 
         # Get first spectrum to determine energy range
         spectrum = self.spectrum_source.get_spectrum(0)
