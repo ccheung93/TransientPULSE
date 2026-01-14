@@ -119,10 +119,13 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     start_index = np.searchsorted(t_duration, t_start, side='left')
     stop_index = np.searchsorted(t_duration, t_end, side='right')
 
+    # Width of momentum bin
+    delta_p = p[1] - p[0]
+    
     for i, (start, stop, p_a, A_a, E_a) in enumerate(zip(start_index, stop_index, p_avg, A_avg, E_avg)):
+        time_mask = np.where((t_duration>t_start[i]) & (t_duration<t_end[i]))
         time_window = t_duration[start:stop]
-        time_duration_mode = (time_window[-1] - time_window[0]) / SEC_TO_INEV
-        spectrogram_array[i][start:stop] += 0.5 * (E_a**2) * (A_a/R)**2 * (ts_sec/time_duration_mode)
+        spectrogram_array[i][time_mask] += 1/(4*PI*R**2 * ts_eV) * (A_a*E_a/p_a) * delta_p
         phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
         phi_t_final[start:stop] +=  phi
 
@@ -294,7 +297,7 @@ def export_source_parameters(avg_density, burst_duration, R, mass, coupling=None
     # In natural units: Volume ~ 4π R^2 * t_star
     if avg_density is not None and R is not None and burst_duration is not None:
         burst_duration_nu = burst_duration * SEC_TO_INEV  # Convert to natural units
-        volume_nu = 4 * np.pi * R**2 * burst_duration_nu  # Natural units
+        volume_nu = 4 * PI * R**2 * burst_duration_nu  # Natural units
         Etot_eV = avg_density * volume_nu
         Etot_solar = Etot_eV / SOLAR_TO_EV
     else:
@@ -451,14 +454,15 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     mask = (t_duration >= cutoff_min) & (t_duration <= cutoff_max)
     spectrogram = spectrogram[:, mask]
     
-    rho_t = np.sum(spectrogram, axis=0) / len(freq)
-    rho_f = np.sum(spectrogram, axis=1) / len(spectrogram)
+    rho_t = np.sum(spectrogram, axis=0)
+    rho_f = np.sum(spectrogram, axis=1)
     
-    rho_f_norm = rho_f/sum(rho_f)
-    f_avg = np.sum(freq * rho_f_norm)
+    delta_f = freq[1] - freq[0]
+    rho_f_norm = rho_f / (np.sum(rho_f) * delta_f)
+    f_avg = np.sum(freq * rho_f_norm) * delta_f
     w_avg = 2*PI*f_avg/SEC_TO_INEV
     rho_t_avg = np.mean(rho_t)
-    std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm))
+    std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm) * delta_f)
     print(f'frequency standard deviation = {std_f}')
     print(f'{max(rho_t)}, {max(rho_f)}')
     
