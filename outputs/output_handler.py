@@ -5,18 +5,19 @@ from inputs.spectrum import SignalModel
 from plotting.plots import *
 
 class OutputHandler:
-    def __init__(self, plot: Plot = None, figsize=(30, 21)):
+    def __init__(self, plot: Plot = None, figsize=None):
         """Initializes the OutputHandler.
 
         Args:
             plot (Plot, optional): Plot configuration containing axis limits. Defaults to None.
-            figsize (tuple, optional): Size of the figure in inches (width, height). Defaults to (30, 21).
+            figsize (tuple, optional): Size of the figure in inches (width, height).
+                                      If None, automatically calculates based on grid size. Defaults to None.
         """
         self.plot = plot
         self.figsize = figsize
         self.xlims = plot.xlims if plot else None
         self.ylims = plot.ylims if plot else None
-    
+
     def _init_figure(self, sources):
         """Initalizes a matplotlib figure and subplots based on whether we're plotting a grid or a single panel
 
@@ -27,10 +28,24 @@ class OutputHandler:
         if isinstance(sources, list) and isinstance(sources[0], list):
             self.nrows = len(sources)
             self.ncols = len(sources[0])
-            self.fig, self.axs = plt.subplots(self.nrows, self.ncols, figsize=self.figsize, sharex=False, sharey=True)
+
+            # Calculate dynamic figure size if not provided
+            if self.figsize is None:
+                panel_width = 15   # Width per panel in inches
+                panel_height = 10.5  # Height per panel in inches
+                figsize = (self.ncols * panel_width, self.nrows * panel_height)
+            else:
+                figsize = self.figsize
+
+            self.fig, self.axs = plt.subplots(self.nrows, self.ncols, figsize=figsize, sharex=False, sharey=True)
             self.axs = np.atleast_2d(self.axs)
         else:
-            self.fig, self.axs = plt.subplots(figsize=self.figsize)
+            # For single panel, use standard size if not provided
+            if self.figsize is None:
+                figsize = (30, 21)
+            else:
+                figsize = self.figsize
+            self.fig, self.axs = plt.subplots(figsize=figsize)
     
     def plot_parameter_space(self, sources, spectra, plot, save_path=None):
         """Main entry point to generate a plot.
