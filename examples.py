@@ -133,8 +133,7 @@ def example_bosenova_csv(filename=None):
 
     # Load bosenova spectrum from file (no header, space-separated)
     # Use num_points=3000 for interpolation to match old implementation
-    spectrum = CSVSpectrum('Spectra/BosonStarSpectrumRelOnly.txt',
-                           i_p=0, i_A=1, skip_header=False, num_points=1000)
+    spectrum = CSVSpectrum('Spectra/BosonStarSpectrumRelOnly.txt', i_p=0, i_A=1, skip_header=False, num_points=1000)
 
     # The file contains dimensionless values - need to scale properly
     # Following old code normalization: momenta * mass, amplitudes * sqrt(1/1e-85)
@@ -160,7 +159,7 @@ def example_bosenova_csv(filename=None):
     x_interp, rho_interp = interpolate_data(x/10000, rho, 1000)  # Bosenova: Convert 10 kpc to 1 pc
     collection.density_profile = [x_interp * KPC_TO_INEV, rho_interp * GCM3_TO_EV4]
 
-    results = collection.propagate_all(N_points_spectrogram=2000, save_waveform=False)
+    results = collection.propagate_all(N_points_spectrogram=1000, save_waveform=False)
 
     # Plot spectrogram
     avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
