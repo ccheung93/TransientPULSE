@@ -139,7 +139,7 @@ def example_bosenova_csv(filename=None):
     # Following old code normalization: momenta * mass, amplitudes * sqrt(1/1e-85)
     momenta, amplitudes = spectrum.get_spectrum()
     scaled_momenta = momenta * mass
-    scaled_amplitudes = np.sqrt(amplitudes * (1/1e-85))  # TODO - define this
+    scaled_amplitudes = amplitudes * (1/1e-85)
 
     # Create a wrapper class to return scaled values
     class ScaledSpectrum(SpectrumSource):
@@ -169,7 +169,7 @@ def example_bosenova_csv(filename=None):
     
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, True, 'bosenova.param')
+    export_source_parameters(avg_density, burst_duration, R, mass, to_file=True, filename='bosenova.param')
     
     return results
 
