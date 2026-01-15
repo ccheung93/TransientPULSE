@@ -261,10 +261,13 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
     end_time = time.time()
     logger.info(f"Saved {filename} in {end_time - start_time:.2f}s")
     
-    return rho_t_avg
+    arrival_window = [t_duration[np.nonzero(rho_t)][0], t_max]
+    
+    return rho_t_avg, arrival_window
 
 
-def export_source_parameters(avg_density, burst_duration, R, mass, coupling=None, K=None,
+def export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=None,
+                              coupling=None, K=None,
                               coupling_type='photon', coupling_order='linear',
                               to_file=False, filename=None):
     """Export source parameters for use in constraint plotting workflow
@@ -274,6 +277,7 @@ def export_source_parameters(avg_density, burst_duration, R, mass, coupling=None
         burst_duration (float): Burst duration [s]
         R (float): Distance [eV^-1 in natural units]
         mass (float): Scalar field mass [eV]
+        arrival_window (tuple, optional): (t_min, t_max) arrival time window [s] for elongated shell calculation
         coupling (float, optional): Dilatonic coupling strength [dimensionless]
         K (float, optional): Energy density fraction
         coupling_type (str): Type of coupling ('photon', 'electron', 'gluon')
@@ -294,10 +298,15 @@ def export_source_parameters(avg_density, burst_duration, R, mass, coupling=None
     # Calculate total energy from avg_density if available
     # E_tot = rho * Volume * duration
     # Volume ~ 4π R^2 * c * t_star (for spherical expansion)
-    # In natural units: Volume ~ 4π R^2 * t_star
-    if avg_density is not None and R is not None and burst_duration is not None:
-        burst_duration_nu = burst_duration * SEC_TO_INEV  # Convert to natural units
-        volume_nu = 4 * PI * R**2 * burst_duration_nu  # Natural units
+    # Use arrival_window for elongated shell if provided, otherwise use burst_duration
+    if avg_density is not None and R is not None:
+        if arrival_window is not None:
+            # Use arrival window to calculate elongated shell duration
+            total_duration = arrival_window[1] - arrival_window[0]
+        else:
+            total_duration = burst_duration
+        total_duration_nu = total_duration * SEC_TO_INEV  # Convert to natural units
+        volume_nu = 4 * np.pi * R**2 * total_duration_nu  # Natural units
         Etot_eV = avg_density * volume_nu
         Etot_solar = Etot_eV / SOLAR_TO_EV
     else:
@@ -331,7 +340,7 @@ def export_source_parameters(avg_density, burst_duration, R, mass, coupling=None
     return params
 
 
-def create_source_from_propagation(avg_density, burst_duration, R, mass,
+def create_source_from_propagation(avg_density, burst_duration, R, mass, arrival_window, 
                                      coupling_type='photon', coupling_order='linear',
                                      ULB_type='scalar'):
     """Create a Source object from waveform propagation results
@@ -370,9 +379,12 @@ def create_source_from_propagation(avg_density, burst_duration, R, mass,
     # Convert units
     R_pc = R / PC_TO_INEV
     tstar_sec = burst_duration
+    
+    # Elongate shell
+    total_duration = arrival_window[1] - arrival_window[0]
 
     # Calculate total energy
-    burst_duration_nu = burst_duration * SEC_TO_INEV
+    burst_duration_nu = total_duration * SEC_TO_INEV
     volume_nu = 4 * np.pi * R**2 * burst_duration_nu
     Etot_eV = avg_density * volume_nu
     Etot_solar = Etot_eV / SOLAR_TO_EV
