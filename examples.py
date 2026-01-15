@@ -6,9 +6,9 @@ spectrum sources: single Gaussian, time-varying, and CSV (bosenova).
 """
 
 import numpy as np
-from utils.constants import SEC_TO_INEV, KPC_TO_INEV, GCM3_TO_EV4
+from utils.constants import SEC_TO_INEV, KPC_TO_INEV, GCM3_TO_EV4, SOLAR_TO_EV
 from utils.data_utils import read_medium_data, interpolate_data
-from inputs.spectrum_sources import (SpectrumSource, CSVSpectrum, AnalyticSpectrum, TimeVaryingSpectrum)
+from inputs.spectrum_sources import (CSVSpectrum, AnalyticSpectrum, TimeVaryingSpectrum)
 from inputs.configs import PhysicsConfig, PropagationConfig
 from utils.logging_utils import setup_logging, get_logger
 from waveform.collection import WaveformCollection
@@ -22,37 +22,39 @@ def example_new_architecture_single_gaussian(filename=None):
     mass = 1e-19
     burst_duration = 2 * np.pi * 100 / (mass * SEC_TO_INEV)
 
-    # Create spectrum source
+    # Create spectrum source with physically motivated amplitude
+    Etot = SOLAR_TO_EV
+    delta_p = 20 * mass
+    amplitude = Etot / (np.sqrt(2*np.pi) * delta_p)
     spectrum = AnalyticSpectrum(
         'gaussian',
         mass=mass,
         num_points=1000,
         peak_momentum=2e2 * mass,
-        width=2e1 * mass,
-        amplitude=1e50
+        width=delta_p,
+        amplitude=amplitude
     )
-
-    # Optionally plot the initial spectrum before propagation
-    # plot_spectrum(spectrum, filename='gaussian_initial.pdf')
 
     # Configure physics and propagation
     physics = PhysicsConfig(mass=mass, coupling=1e20, K=1e-3, burst_duration=burst_duration)
     propagation_config = PropagationConfig('Galactic_Density_Profile.csv', density_num_points=2000)
 
     # Create collection and propagate
+    N_points_spectrogram = 2000
     collection = WaveformCollection(spectrum, physics, propagation_config)
-    results = collection.propagate_all(N_points_spectrogram=2000)
+    results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram)
 
     # Plot spectrogram
-    avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
+    avg_density, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("Single Gaussian propagation complete. Spectrogram saved.")
-    
+
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, True, 'gaussian.param')
-    
+    export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=arrival_window,
+                             to_file=True, filename='gaussian.param')
+
     return results
 
 
@@ -64,14 +66,17 @@ def example_new_architecture_time_varying(filename=None):
     mass = 1e-19
     burst_duration = 2 * np.pi * 100 / (mass * SEC_TO_INEV)
 
-    # Create base Gaussian spectrum
+    # Create base Gaussian spectrum with physically motivated amplitude
+    Etot = SOLAR_TO_EV
+    delta_p = 20 * mass
+    amplitude = Etot / (np.sqrt(2*np.pi) * delta_p)
     base_gaussian = AnalyticSpectrum(
         'gaussian',
         mass=mass,
         num_points=1000,
         peak_momentum=2e2 * mass,
         width=2e1 * mass,
-        amplitude=1e50
+        amplitude=amplitude
     )
 
     # Create time-varying wrapper with Gaussian amplitude profile
@@ -82,44 +87,29 @@ def example_new_architecture_time_varying(filename=None):
     # Define time windows for each step
     time_windows = [(i * burst_duration * SEC_TO_INEV / N_time_steps, (i + 1) * burst_duration * SEC_TO_INEV / N_time_steps)
                     for i in range(N_time_steps)]
-    
-    # Print emission details
-    base_amplitude = base_gaussian.params.get('amplitude', 1.0)
-    logger.info(f"\nEmission Configuration:")
-    logger.info(f"  Number of time steps: {N_time_steps}")
-    logger.info(f"  Burst duration: {burst_duration:.3e} s")
-    logger.info(f"  Base amplitude: {base_amplitude:.3e}")
-    logger.info(f"\nTime-varying emission schedule:")
-    for i in range(N_time_steps):
-        amp_factor = amplitude_profile[i]
-        effective_amp = base_amplitude * amp_factor
-        t_start = time_windows[i][0] / SEC_TO_INEV  # Convert to seconds
-        t_end = time_windows[i][1] / SEC_TO_INEV
-        energy_density_factor = amp_factor**2
-        logger.info(f"  Step {i}:")
-        logger.info(f"    Amplitude factor: {amp_factor:.4f}")
-        logger.info(f"    Effective amplitude: {effective_amp:.3e}")
-        logger.info(f"    Energy density factor: {energy_density_factor:.4f} ({energy_density_factor:.2e})")
-        logger.info(f"    Emission time window: [{t_start:.3e}, {t_end:.3e}] s")
-        
+
     time_varying = TimeVaryingSpectrum(base_gaussian, amplitude_profile, time_windows)
 
     # Configure and propagate
     physics = PhysicsConfig(mass=mass, coupling=1e20, K=1e-3, burst_duration=burst_duration)
     propagation_config = PropagationConfig('Galactic_Density_Profile.csv', density_num_points=2000)
 
+    # Create collection and propagate
+    N_points_spectrogram = 2000
     collection = WaveformCollection(time_varying, physics, propagation_config)
-    results = collection.propagate_all(N_points_spectrogram=2000, save_waveform=False)
+    results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram, save_waveform=False)
 
     # Plot spectrogram
-    avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'], results['E'], results['spectrogram'], filename=filename)
+    avg_density, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
+                     results['E'], results['spectrogram'], filename=filename)
 
     logger.info(f"Time-varying propagation complete with {N_time_steps} steps")
-    
+
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, True, 'gaussian_tv.param')
-    
+    export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=arrival_window,
+                             to_file=True, filename='gaussian_tv.param')
+
     return results
 
 
@@ -131,46 +121,42 @@ def example_bosenova_csv(filename=None):
     mass = 1e-19
     burst_duration = 400 / (mass * SEC_TO_INEV)
 
-    # Load bosenova spectrum from file (no header, space-separated)
-    # Use num_points=3000 for interpolation to match old implementation
-    spectrum = CSVSpectrum('Spectra/BosonStarSpectrumRelOnly.txt', i_p=0, i_A=1, skip_header=False, num_points=1000)
-
-    # The file contains dimensionless values - need to scale properly
-    # Following old code normalization: momenta * mass, amplitudes * sqrt(1/1e-85)
-    momenta, amplitudes = spectrum.get_spectrum()
-    scaled_momenta = momenta * mass
-    scaled_amplitudes = amplitudes * (1/1e-85)
-
-    # Create a wrapper class to return scaled values
-    class ScaledSpectrum(SpectrumSource):
-        def get_spectrum(self, time_index=None):
-            return scaled_momenta, scaled_amplitudes
-
-    scaled_spectrum = ScaledSpectrum()
+    # Load bosenova spectrum from CSV with scaling applied directly
+    spectrum = CSVSpectrum(
+        'Spectra/BosonStarSpectrumRelOnly.txt',
+        i_p=0,
+        i_A=1,
+        skip_header=False,
+        num_points=1000,
+        scaled_momentum=mass,  # Scale dimensionless momentum by mass
+        scaled_amplitude=lambda A: A * (1/1e-85)  # Normalization scaling
+    )
 
     physics = PhysicsConfig(mass=mass, coupling=1e22, K=1e-3, burst_duration=burst_duration)
     propagation_config = PropagationConfig('Galactic_Density_Profile.csv', density_num_points=1000)
 
-    # For bosenova, need to scale the density profile distance from 10kpc to 1pc (x/10000) before creating collection
-    # We'll create a custom WaveformCollection with modified density loading
-    collection = WaveformCollection(scaled_spectrum, physics, propagation_config)
+    # For bosenova, scale the density profile distance from 10kpc to 1pc (x/10000)
+    collection = WaveformCollection(spectrum, physics, propagation_config)
+
     # Override the density profile to apply bosenova scaling
     x, rho = read_medium_data('Galactic_Density_Profile.csv', i_R=0, i_rho=2)
     x_interp, rho_interp = interpolate_data(x/10000, rho, 1000)  # Bosenova: Convert 10 kpc to 1 pc
     collection.density_profile = [x_interp * KPC_TO_INEV, rho_interp * GCM3_TO_EV4]
 
-    results = collection.propagate_all(N_points_spectrogram=1000, save_waveform=False)
+    N_points_spectrogram = 1000
+    results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram, save_waveform=False)
 
     # Plot spectrogram
-    avg_density = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
+    avg_density, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("CSV (Bosenova) spectrum propagation complete. Spectrogram saved.")
-    
+
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, to_file=True, filename='bosenova.param')
-    
+    export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=arrival_window,
+                             to_file=True, filename='bosenova.param')
+
     return results
 
 if __name__ == '__main__':
