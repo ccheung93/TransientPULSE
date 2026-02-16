@@ -1,5 +1,5 @@
 """
-Examples demonstrating the new architecture for waveform propagation.
+Examples demonstrating waveform propagation.
 
 This file contains example usage of the WaveformCollection API with various
 spectrum sources: single Gaussian, time-varying, and CSV (bosenova).
