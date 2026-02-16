@@ -129,7 +129,7 @@ def example_bosenova_csv(filename=None):
         skip_header=False,
         num_points=1000,
         scaled_momentum=mass,  # Scale dimensionless momentum by mass
-        scaled_amplitude=lambda A: A * (1/1e-85)  # Normalization scaling
+        scaled_amplitude=lambda A: A * (0.3/1e-85)  # Normalization scaling
     )
 
     physics = PhysicsConfig(mass=mass, coupling=1e22, K=1e-3, burst_duration=burst_duration)
@@ -142,7 +142,6 @@ def example_bosenova_csv(filename=None):
     x, rho = read_medium_data('Galactic_Density_Profile.csv', i_R=0, i_rho=2)
     x_interp, rho_interp = interpolate_data(x/10000, rho, 1000)  # Bosenova: Convert 10 kpc to 1 pc
     collection.density_profile = [x_interp * KPC_TO_INEV, rho_interp * GCM3_TO_EV4]
-
     N_points_spectrogram = 1000
     results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram, save_waveform=False)
 
@@ -169,6 +168,6 @@ if __name__ == '__main__':
     setup_logging(log_file='propagation.log', level='INFO')
 
     # Uncomment the example you want to run:
-    example_new_architecture_single_gaussian(filename='spectrogram_single_gaussian.pdf')
-    example_new_architecture_time_varying(filename='spectrogram_time_varying.pdf')
-    example_bosenova_csv(filename='spectrogram_bosenova.pdf')
+    example_new_architecture_single_gaussian(filename='plots/spectrogram_single_gaussian.pdf')
+    example_new_architecture_time_varying(filename='plots/spectrogram_time_varying.pdf')
+    example_bosenova_csv(filename='plots/spectrogram_bosenova.pdf')

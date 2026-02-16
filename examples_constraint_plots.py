@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -119,7 +120,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
     
     # Set up general parameters
     distance_label = get_distance_label(R) 
-    filename = f"{distance_label}_{coupling_type}_{coupling_order}_dilatoniccoupling.pdf"
+    filename = f"plots/{distance_label}_{coupling_type}_{coupling_order}_dilatoniccoupling.pdf"
     wmp_contour = np.logspace(0,30,1000)
     
     Elist = mass[0][0]*wmp_contour
@@ -184,7 +185,10 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
 
     setup_axis_labels(fig, coupling_order, coupling_type)
     
-    if save_plots: plt.savefig(filename, dpi = 300)
+    if save_plots:
+        if os.path.dirname(filename):
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+        plt.savefig(filename, dpi = 300)
     if show_plots: plt.show()
     
     
