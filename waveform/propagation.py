@@ -6,6 +6,7 @@ and spectrogram generation.
 """
 
 import numpy as np
+import os
 import time
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -139,7 +140,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array, valid
 
 
-def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
+def plot_waveform(t_duration, phi_signal, filename='plots/waveform_plot.pdf'):
     """
     Plot and save the scalar field waveform at Earth.
 
@@ -149,6 +150,8 @@ def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
         filename (str): Output filename for plot
     """
     start_time = time.time()
+    if os.path.dirname(filename):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
     logger.info(f'Saving waveform plot to {filename}')
 
     plt.rcParams['mathtext.fontset'] = 'cm'
@@ -169,7 +172,7 @@ def plot_waveform(t_duration, phi_signal, filename='waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = None, cutoff_max = None, filename='spectrogram_plot.pdf'):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = None, cutoff_max = None, filename='plots/spectrogram_plot.pdf'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -182,6 +185,8 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
         filename (str): Output filename for plot
     """
     start_time = time.time()
+    if os.path.dirname(filename):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
     logger.info("Starting spectrogram generation")
     delta_t = (t_max - t_min) / N_points
     logger.debug(f'delta_t = {delta_t}, N={N_points}')
@@ -224,7 +229,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
     # Calculate densities
     cutoff_min = cutoff_min if cutoff_min else 0
     cutoff_max = cutoff_max if cutoff_max else t_max
-    rho_t, rho_f, rho_t_avg, f_avg, std_f = calc_densities(t_duration, spectrogram_array, freq, cutoff_min, cutoff_max)
+    _, rho_t, rho_f, rho_t_avg, f_avg, std_f = calc_densities(t_duration, spectrogram_array, freq, cutoff_min, cutoff_max)
 
     # Plot densities
     divider = mpl.axes_grid1.make_axes_locatable(ax)
@@ -478,4 +483,4 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     print(f'frequency standard deviation = {std_f}')
     print(f'{max(rho_t)}, {max(rho_f)}')
     
-    return rho_t, rho_f_norm, rho_t_avg, f_avg, std_f
+    return w_avg, rho_t, rho_f_norm, rho_t_avg, f_avg, std_f
