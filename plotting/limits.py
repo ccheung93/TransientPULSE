@@ -9,8 +9,8 @@ def load_external_limits(filename):
     return x, y
 
 def load_linear_constraints(Elist):
-    Microscope_x, Microscope_y = load_external_limits('Linear Scalar Photon/MICROSCOPE.txt')
-    FifthForce_x, FifthForce_y = load_external_limits('Linear Scalar Photon/FifthForce.txt')
+    Microscope_x, Microscope_y = load_external_limits('data/Linear Scalar Photon/MICROSCOPE.txt')
+    FifthForce_x, FifthForce_y = load_external_limits('data/Linear Scalar Photon/FifthForce.txt')
     Microscope_m = [Microscope_y[0]] * len(Elist)    
     FifthForce_m = [FifthForce_y[0]] * len(Elist)
     
