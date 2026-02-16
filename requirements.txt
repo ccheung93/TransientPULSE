@@ -1,0 +1,15 @@
+# MultimessengerSpectrum Dependencies
+# Python 3.8+ required
+
+# Core numerical computing
+numpy>=1.20,<3.0
+scipy>=1.6,<2.0
+
+# Visualization
+matplotlib>=3.3,<4.0
+
+# Optional: Interactive notebooks
+jupyter>=1.0
+jupyter-client>=7.0
+jupyter-core>=5.0
+matplotlib-inline>=0.1
