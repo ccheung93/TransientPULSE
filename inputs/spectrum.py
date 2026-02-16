@@ -81,7 +81,7 @@ class SignalModel:
             if not isinstance(file, str):
                 raise TypeError(
                     f"file must be a string path, got {type(file).__name__}.\n"
-                    f"Example: file='Spectra/BosonStarSpectrumRelOnly.txt'"
+                    f"Example: file='data/BosonStarSpectrumRelOnly.txt'"
                 )
             self.is_axion = False  # Default for file-based loading
 

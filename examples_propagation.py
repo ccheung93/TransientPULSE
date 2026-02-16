@@ -37,7 +37,7 @@ def example_new_architecture_single_gaussian(filename=None):
 
     # Configure physics and propagation
     physics = PhysicsConfig(mass=mass, coupling=1e20, K=1e-3, burst_duration=burst_duration)
-    propagation_config = PropagationConfig('Galactic_Density_Profile.csv', density_num_points=2000)
+    propagation_config = PropagationConfig('data/Galactic_Density_Profile.csv', density_num_points=2000)
 
     # Create collection and propagate
     N_points_spectrogram = 2000
@@ -92,7 +92,7 @@ def example_new_architecture_time_varying(filename=None):
 
     # Configure and propagate
     physics = PhysicsConfig(mass=mass, coupling=1e20, K=1e-3, burst_duration=burst_duration)
-    propagation_config = PropagationConfig('Galactic_Density_Profile.csv', density_num_points=2000)
+    propagation_config = PropagationConfig('data/Galactic_Density_Profile.csv', density_num_points=2000)
 
     # Create collection and propagate
     N_points_spectrogram = 2000
@@ -123,7 +123,7 @@ def example_bosenova_csv(filename=None):
 
     # Load bosenova spectrum from CSV with scaling applied directly
     spectrum = CSVSpectrum(
-        'Spectra/BosonStarSpectrumRelOnly.txt',
+        'data/BosonStarSpectrumRelOnly.txt',
         i_p=0,
         i_A=1,
         skip_header=False,
@@ -133,13 +133,13 @@ def example_bosenova_csv(filename=None):
     )
 
     physics = PhysicsConfig(mass=mass, coupling=1e22, K=1e-3, burst_duration=burst_duration)
-    propagation_config = PropagationConfig('Galactic_Density_Profile.csv', density_num_points=1000)
+    propagation_config = PropagationConfig('data/Galactic_Density_Profile.csv', density_num_points=1000)
 
     # For bosenova, scale the density profile distance from 10kpc to 1pc (x/10000)
     collection = WaveformCollection(spectrum, physics, propagation_config)
 
     # Override the density profile to apply bosenova scaling
-    x, rho = read_medium_data('Galactic_Density_Profile.csv', i_R=0, i_rho=2)
+    x, rho = read_medium_data('data/Galactic_Density_Profile.csv', i_R=0, i_rho=2)
     x_interp, rho_interp = interpolate_data(x/10000, rho, 1000)  # Bosenova: Convert 10 kpc to 1 pc
     collection.density_profile = [x_interp * KPC_TO_INEV, rho_interp * GCM3_TO_EV4]
     N_points_spectrogram = 1000
