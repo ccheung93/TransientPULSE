@@ -4,6 +4,7 @@ Spectrum source classes for the new architecture.
 Provides flexible spectrum generation and loading for propagation simulations.
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.data_utils import interpolate_data
@@ -223,7 +224,7 @@ class TimeVaryingSpectrum(SpectrumSource):
         return None
 
 
-def plot_spectrum(spectrum_source, time_index=None, filename='spectrum_initial.pdf',
+def plot_spectrum(spectrum_source, time_index=None, filename='plots/spectrum_initial.pdf',
                   xlabel='Momentum (eV)', ylabel='Amplitude', title=None):
     """
     Plot and save a spectrum from a SpectrumSource.
@@ -249,6 +250,8 @@ def plot_spectrum(spectrum_source, time_index=None, filename='spectrum_initial.p
     if title:
         ax.set_title(title)
 
+    if os.path.dirname(filename):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
     plt.savefig(filename, dpi=300)
     plt.close()
     print(f'Saved spectrum plot to {filename}')

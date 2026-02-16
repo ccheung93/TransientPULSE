@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 from inputs.source import Source
@@ -68,6 +69,8 @@ class OutputHandler:
             self._add_shared_legend(plot)
             
         if save_path:
+            if os.path.dirname(save_path):
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
             self.fig.savefig(save_path, bbox_inches='tight')
         else:
             plt.show()
