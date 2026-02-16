@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from inputs.source import Source
 from inputs.spectrum import SignalModel
-from plotting.plots import *
+from .plots import *
 
 class OutputHandler:
     def __init__(self, plot: Plot = None, figsize=None):

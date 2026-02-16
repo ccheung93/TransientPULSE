@@ -9,3 +9,4 @@ This module contains:
 
 from .plots import *
 from .limits import *
+from .output_handler import OutputHandler
