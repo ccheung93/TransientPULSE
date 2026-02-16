@@ -273,7 +273,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
 
 def export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=None,
                               coupling=None, K=None,
-                              coupling_type='photon', coupling_order='linear',
+                              coupling_type='', coupling_order='',
                               to_file=False, filename=None):
     """Export source parameters for use in constraint plotting workflow
 
@@ -346,8 +346,8 @@ def export_source_parameters(avg_density, burst_duration, R, mass, arrival_windo
 
 
 def create_source_from_propagation(avg_density, burst_duration, R, mass, arrival_window, 
-                                     coupling_type='photon', coupling_order='linear',
-                                     ULB_type='scalar'):
+                                     coupling_type='', coupling_order='',
+                                     ULB_type=''):
     """Create a Source object from waveform propagation results
 
     This is a bridge function between the waveform propagation workflow (Part 1)
@@ -408,7 +408,7 @@ def create_source_from_propagation(avg_density, burst_duration, R, mass, arrival
     return source
 
 
-def load_source_from_file(filename='source.params', ULB_type='scalar'):
+def load_source_from_file(filename='source.params', ULB_type=''):
     """Load a Source object from parameter file created by export_source_parameters
 
     Args:
