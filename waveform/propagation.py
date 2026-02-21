@@ -116,19 +116,23 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_start = t_arrivals[i1] + delta_t_s[0]     # Defined by fastest momentum mode in the momentum bin
     t_end = t_arrivals[i0] + delta_t_s[1]       # Defined by the slowest momentum mode in the bin
 
-    # Indices in the time array using searchsorted for robust index finding
-    start_index = np.searchsorted(t_duration, t_start, side='left')
-    stop_index = np.searchsorted(t_duration, t_end, side='right')
-
     # Width of momentum bin
     delta_p = p[1] - p[0]
     
-    for i, (start, stop, p_a, A_a, E_a) in enumerate(zip(start_index, stop_index, p_avg, A_avg, E_avg)):
+    spec_value = 1/(4*PI*R**2 * ts_eV) * delta_p
+
+    for i, (p_a, A_a, E_a) in enumerate(zip(p_avg, A_avg, E_avg)):
         time_mask = np.where((t_duration>t_start[i]) & (t_duration<t_end[i]))
-        time_window = t_duration[start:stop]
-        spectrogram_array[i][time_mask] += 1/(4*PI*R**2 * ts_eV) * (A_a*E_a/p_a) * delta_p
+        time_window = t_duration[time_mask]
+
+        if len(time_mask[0]) > 0:
+            spectrogram_array[i][time_mask] += spec_value * (A_a*E_a/p_a)
+        else:
+            # Assign contribution to the nearest time bin so the spectrogram has no gaps.
+            nearest = np.clip(np.searchsorted(t_duration, t_start[i]), 0, len(t_duration) - 1)
+            spectrogram_array[i][nearest] += spec_value * (A_a*E_a/p_a)
         phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
-        phi_t_final[start:stop] +=  phi
+        phi_t_final[time_mask] +=  phi
 
     end_time = time.time()
     logger.info(f'Propagation completed in {end_time - start_time:.2f}s')
