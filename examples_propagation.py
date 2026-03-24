@@ -142,11 +142,10 @@ def example_bosenova_csv(filename=None):
     x, rho = read_medium_data('data/Galactic_Density_Profile.csv', i_R=0, i_rho=2)
     x_interp, rho_interp = interpolate_data(x/10000, rho, 1000)  # Bosenova: Convert 10 kpc to 1 pc
     collection.density_profile = [x_interp * KPC_TO_INEV, rho_interp * GCM3_TO_EV4]
-    N_points_spectrogram = 1000
-    results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram, save_waveform=False)
+    results = collection.propagate_all(N_points_spectrogram=None, save_waveform=False)
 
     # Plot spectrogram
-    avg_density, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
+    avg_density, arrival_window = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("CSV (Bosenova) spectrum propagation complete. Spectrogram saved.")

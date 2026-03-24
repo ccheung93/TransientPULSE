@@ -69,15 +69,19 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_fastest_absolute = propagation_time_GW(R)
 
     valid1 = True
-    spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
+    
+    # Modes are screened if m_eff > E anywhere along the path.
+    # The worst case is at maximum density, so check against that.
+    beta_max = (8*PI/PLANCK_MASS_EV**2) * d * K * np.max(rho)
+    not_screened = E**2 > m**2 + beta_max
 
     if valid1:
         # Looking at factor of max_to_min_amp_ratio from max flux
         max_to_min_amp_ratio = 1e7
-        valid = np.where((A >= max(A)/max_to_min_amp_ratio))[0]
+        valid = np.where((A >= max(A)/max_to_min_amp_ratio) & not_screened)[0]
     else:
         # Looking at part of the waveform that arrives in the lifetime of the experiment, e.g. the tail of the spectrum
-        valid = np.where((t_arrivals - t_fastest_absolute) <= t_exp_ineV)[0]
+        valid = np.where(((t_arrivals - t_fastest_absolute) <= t_exp_ineV) & not_screened)[0]
 
     # Define emission time window at source
     # time_step_range already contains the specific time window for this emission step
@@ -96,8 +100,8 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_d = t_slowest - t_fastest
     logger.debug(f"Arrival time: {(t_fastest/SEC_TO_INEV)/3e7:.6f} years")
 
-    N_points = 1e4
-
+    # Default N_spectrogram points if not defined
+    N_points_spectrogram = N_points_spectrogram if N_points_spectrogram else int(np.median([1e3, t_d/ts_eV, 1e7]))
 
     t_duration = np.linspace(t_fastest, t_slowest, int(N_points_spectrogram))
     t_duration_Earth_s = (t_duration - t_fastest_absolute)/SEC_TO_INEV
@@ -120,7 +124,9 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     delta_p = p[1] - p[0]
     
     spec_value = 1/(4*PI*R**2 * ts_eV) * delta_p
-
+    
+    spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
+    
     for i, (p_a, A_a, E_a) in enumerate(zip(p_avg, A_avg, E_avg)):
         time_mask = np.where((t_duration>t_start[i]) & (t_duration<t_end[i]))
         time_window = t_duration[time_mask]
@@ -141,7 +147,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     if save_waveform:
         plot_waveform(t_duration_Earth_s, phi_t_final, filename='waveform_plot.pdf')
         
-    return t_duration_Earth_s, phi_t_final, N_points, E, spectrogram_array, valid
+    return t_duration_Earth_s, phi_t_final, N_points_spectrogram, E, spectrogram_array, valid
 
 
 def plot_waveform(t_duration, phi_signal, filename='plots/waveform_plot.pdf'):

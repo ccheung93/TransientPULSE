@@ -134,7 +134,7 @@ class WaveformCollection:
                                            save_waveform, global_time_range)
             self.results.append(result)
 
-        return self._aggregate_results(N_points_spectrogram)
+        return self._aggregate_results()
 
 
     def _propagate_single(self, spectrum, time_window, N_points_spectrogram, N_time_steps,
@@ -184,12 +184,9 @@ class WaveformCollection:
             'valid': valid
         }
 
-    def _aggregate_results(self, N_points_spectrogram):
+    def _aggregate_results(self):
         """
         Combine results from all time steps
-
-        Args:
-            N_points_spectrogram (int): Number of points for spectrogram
 
         Returns:
             dict: Aggregated results
@@ -203,7 +200,7 @@ class WaveformCollection:
             return {
                 't_min': result['t_duration'].min(),
                 't_max': result['t_duration'].max(),
-                'N_points': N_points_spectrogram,
+                'N_points': result['N_points'],
                 'E': result['E'],
                 'spectrogram': result['spectrogram'],
                 't_duration': result['t_duration'],
@@ -224,7 +221,7 @@ class WaveformCollection:
         return {
             't_min': t_min,
             't_max': t_max,
-            'N_points': N_points_spectrogram,
+            'N_points': self.results[0]['N_points'],
             'E': E,
             'spectrogram': spectrogram_total,
             'valid': valid
