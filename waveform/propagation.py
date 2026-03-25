@@ -127,16 +127,16 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     
     spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
     
-    for i, (p_a, A_a, E_a) in enumerate(zip(p_avg, A_avg, E_avg)):
+    for i, (i0_idx, p_a, A_a, E_a) in enumerate(zip(i0, p_avg, A_avg, E_avg)):
         time_mask = np.where((t_duration>t_start[i]) & (t_duration<t_end[i]))
         time_window = t_duration[time_mask]
 
         if len(time_mask[0]) > 0:
-            spectrogram_array[i][time_mask] += spec_value * (A_a*E_a/p_a)
+            spectrogram_array[i0_idx][time_mask] += spec_value * (A_a*E_a/p_a)
         else:
             # Assign contribution to the nearest time bin so the spectrogram has no gaps.
             nearest = np.clip(np.searchsorted(t_duration, t_start[i]), 0, len(t_duration) - 1)
-            spectrogram_array[i][nearest] += spec_value * (A_a*E_a/p_a)
+            spectrogram_array[i0_idx][nearest] += spec_value * (A_a*E_a/p_a)
         phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
         phi_t_final[time_mask] +=  phi
 
