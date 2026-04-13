@@ -108,9 +108,9 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     phi_t_final = np.zeros(len(t_duration))
 
-    # Define indices for all bin starts
-    i0 = valid[:-2]
-    i1 = valid[1:-1]
+    # Define indices for all adjacent bin pairs
+    i0 = valid[:-1]
+    i1 = valid[1:]
 
     p_avg = (p[i0] + p[i1]) / 2
     A_avg = (A[i0] + A[i1]) / 2
