@@ -488,7 +488,7 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     rho_f_norm = rho_f / (np.sum(rho_f) * delta_f)
     f_avg = np.sum(freq * rho_f_norm) * delta_f
     w_avg = 2*PI*f_avg/SEC_TO_INEV
-    rho_t_avg = np.mean(rho_t)
+    rho_t_avg = np.mean(rho_t[rho_t > 0])
     std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm) * delta_f)
     print(f'frequency standard deviation = {std_f}')
     print(f'max density = {max(rho_t)}, {max(rho_f)}')
