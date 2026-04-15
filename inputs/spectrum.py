@@ -1,6 +1,7 @@
 import numpy as np
 from calculations.constraints import *
 from utils.constants import *
+from utils.expt_params import *
 from inputs.source import Source
 from inputs.experiment import Experiment
 

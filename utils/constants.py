@@ -36,65 +36,13 @@ MASS_ELECTRON = 0.511e6                    # mass of electron in eV
 
 PI = np.pi
 
-# Define normalization multipliers for electron and photon couplings
-DEFAULT_NORMALIZATION_MULTIPLIER = {
-    'electron': 1/(2*MASS_ELECTRON/GIGA_TO_BASE), # 1/GeV
-    'photon': 1/4,
-    'proton': 1,
-    'neutron': 1,
-    'EDM': 1
-}
-
-G_DM_BENCHMARKS = {
-    'electron': 2e-14,   # 1/GeV
-    'photon': 3e-16,     # 1/GeV
-    'proton': 1e-12,     # 1/GeV
-    'neutron': 1e-11,    # 1/GeV
-    'EDM': 1e-18         # 1/GeV^2
-}
-
-# Astrophysical constraint benchmarks in the convention of Eq. 5 in arXiv:2502.08716v1
-ASTROPHYSICAL_CONSTRAINT_BENCHMARKS = {
-    'electron': 1e-13,
-    'photon': 5e-13,
-    'proton': 6e-10,
-    'neutron': 1.3e-9,
-    'EDM': 6.7e-9
-}
-
-# Fraction of energy density of specific regimes ('space', 'earth', 'atmosphere') that is from the coupling type
-ENERGY_DENSITY_FRACTIONS = {
-    'space': {
-        'photon': 6.3e-4,
-        'electron': 4.4e-4,
-        'gluon': 1
-    },
-    'earth': {
-        'photon': 1.9e-3,
-        'electron': 2.4e-4,
-        'gluon': 1
-    },
-    'atmosphere': {
-        'photon': 9.5e-4,
-        'electron': 2.7e-4,
-        'gluon': 1
-    }
-}
-
-# Fractional sensitivity of the coupling type to a dark matter signal
-DM_SENSITIVITIES = {
-    'photon': 1e-19/6000,
-    'electron': 1e-17,
-    'gluon': 1e-24
-}
-
 # Densities of ISM and IGM converted from g/cm^3 to eV^4
 RHO_ISM_GCM3 = 1.67e-24
 RHO_ISM = RHO_ISM_GCM3 * GCM3_TO_EV4
 RHO_IGM_GCM3 = 1.67e-30
 RHO_IGM = RHO_IGM_GCM3 * GCM3_TO_EV4
 
-# Ambient dark matter density
+# Local dark matter density
 RHO_DM_GEV_CM3 = 0.4 # GeV/cm^3
 RHO_DM_EV4 = RHO_DM_GEV_CM3 * GIGA_TO_BASE * (INEV_TO_METERS * 100)**3
 
