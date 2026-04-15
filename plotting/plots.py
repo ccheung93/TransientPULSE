@@ -86,7 +86,7 @@ def setup_axes(ax, xlims, ylims):
     ax.xaxis.set_major_formatter(formatter)
     ax.yaxis.set_major_formatter(formatter)
     
-    ax.set_xticks(np.logspace(-20,-6,7))
+    ax.set_xticks(np.logspace(-20,-6,8))
     ax.set_xlim(*xlims)
     ax.set_ylim(*ylims)
     
@@ -328,7 +328,7 @@ def label_critical_screening(ax, K_E, K_atm, coupling_type, filename):
     }
     
     for prefix in distance_scales:
-        if filename.startswith(prefix):
+        if prefix in filename:
             pos = crit_screening_positions[coupling_type][prefix]
             lbl = crit_screening_labels[coupling_type]
             ax.text(*pos["eth"], lbl["eth"], fontsize = 35, color = 'tab:blue')
@@ -388,7 +388,7 @@ def plot_parameter_list(ax, i, j, coupling_type, coupling_order, filename):
     }
 
     for prefix in distance_scales:
-        if filename.startswith(prefix):
+        if prefix in filename:
             if coupling_order == "linear":
                 pos = (5e-12, 4e-9) if coupling_type == "photon" else (2e-11, 4e-9)
             else:
