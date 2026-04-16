@@ -159,6 +159,10 @@ def plot_fill_coupling_from_time_delay(ax, range_x, dday1, dday30, dyear1, dyear
     ax.fill_between(range_x, dyear1, dyear30, color = 'tab:red', alpha = 0.1)
 
 def label_coupling_from_time_delay(ax, pos_x, pos_y, time_label, color, fontsize=25, rotation=90):
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    if not (xmin <= pos_x <= xmax and ymin <= pos_y <= ymax):
+        return
     label = rf'$\delta t\, \gtrsim \, 1~{{\rm {time_label}}}~\uparrow$'
     add_boxed_label(ax, pos_x, pos_y, label, rotation = rotation, fontsize = fontsize, color = color)
     
@@ -205,7 +209,7 @@ def label_E_unc(ax, E_unc=None, pos_x=None, pos_y=None, fontsize=35, color='tab:
             pos_x = xmin * 5
     if pos_y is None:
         ymin, ymax = ax.get_ylim()
-        pos_y = ymin * 100
+        pos_y = ymin * 10
 
     add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize=fontsize, color=color) 
     
