@@ -33,6 +33,11 @@ class SignalModel:
         self.constraint = None
         self.coupling_probe = None
         self.coupling_time_delays = {}
+        self.coupling_time_delays_secondary = {}
+        self.d_screen_earth = None
+        self.d_screen_atm = None
+        self.d_screen_exp = None
+        self.sensitivity = None
 
         # Validate input combination
         if file is not None and source is not None:
@@ -94,6 +99,7 @@ class SignalModel:
 
         # Compute derived quantities if using source model
         if source:
+            self.sensitivity = experiment.sensitivity
             self._compute_derived_quantities(source, experiment)
             self.coupling_probe = coupling_probe(
                 source.Etot, source.tstar, source.R, self.w, source.mass,
@@ -181,7 +187,19 @@ class SignalModel:
             coupling_order=source.coupling_order,
             axion=self.is_axion
         )
+        K = experiment.K if experiment.K is not None else ENERGY_DENSITY_FRACTIONS['space'].get(source.coupling_type, 1.0)
         for label, dt in experiment.time_delays.items():
             self.coupling_time_delays[label] = coupling_from_time_delay(
-                dt, source.R, source.mass, self.w, 1e-6, 0, axion=self.is_axion
+                dt, source.R, source.mass, self.w, experiment.Dg, K, axion=self.is_axion
             )
+        if experiment.Dg_secondary is not None:
+            for label, dt in experiment.time_delays.items():
+                self.coupling_time_delays_secondary[label] = coupling_from_time_delay(
+                    dt, source.R, source.mass, self.w, experiment.Dg_secondary, K, axion=self.is_axion
+                )
+        if not self.is_axion and source.coupling_order == 'quad':
+            K_E = ENERGY_DENSITY_FRACTIONS['earth'].get(source.coupling_type, 1.0)
+            K_atm = ENERGY_DENSITY_FRACTIONS['atmosphere'].get(source.coupling_type, 1.0)
+            self.d_screen_earth = coupling_critical(self.w, R_E, RHO_E, source.mass, K_E)
+            self.d_screen_atm = coupling_critical(self.w, R_ATM, RHO_ATM, source.mass, K_atm)
+            self.d_screen_exp = coupling_critical(self.w, R_EXP, RHO_EXP, source.mass, K_E)

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from inputs.source import Source
 from inputs.spectrum import SignalModel
+from utils.constants import SOLAR_TO_EV
 from .plots import *
 
 class OutputHandler:
@@ -64,6 +65,7 @@ class OutputHandler:
             self._plot_single_panel(self.axs, sources, spectra, plot)
             setup_title(self.axs, rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {np.log10(sources.mass):.0f}$')
             setup_time_label(self.axs, rf'$t_*$ = {sources.tstar:g} s', padding=40)
+            self._plot_source_params(self.axs, sources, spectra, plot)
         
         if plot.include_legend:
             self._add_shared_legend(plot)
@@ -108,6 +110,8 @@ class OutputHandler:
                     setup_title(ax, rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {np.log10(source.mass):.0f}$')
                 if j == self.ncols - 1:
                     setup_time_label(ax, rf'$t_*$ = {source.tstar:g} s', padding=40)
+                if i == self.nrows - 1 and j == self.ncols - 1:
+                    self._plot_source_params(ax, source, spectrum, plot)
                     
                 ax.tick_params(axis='both', which='both', labelsize=25)
         
@@ -166,9 +170,14 @@ class OutputHandler:
 
         if source.ULB_type == 'ALP':
             plot_constraint(ax, spectrum.constraint, source.coupling_type)
-        else:
-            # TODO plot_MICROSCOPE(ax, spectrum.w)
-            pass
+        elif source.coupling_order == 'quad':
+            plot_supernova(ax, spectrum.w, spectrum.constraint, source.coupling_type)
+            if spectrum.d_screen_earth is not None:
+                plot_crit_couplings(ax, spectrum.w, spectrum.d_screen_earth, spectrum.d_screen_exp, spectrum.d_screen_atm)
+                crit_label_pos = plot.label_positions.get('crit_screening')
+                label_critical_screening(ax, source.coupling_type, spectrum.w,
+                                         spectrum.d_screen_earth, spectrum.d_screen_atm,
+                                         spectrum.d_screen_exp, label_positions=crit_label_pos)
     
     def _plot_couplings(self, ax, x, spectrum: SignalModel, plot: Plot):
         """Plot the coupling curve and time delay lines.
@@ -183,11 +192,71 @@ class OutputHandler:
         colors = ['tab:purple', 'tab:red', 'tab:orange', 'tab:green', 'tab:blue']
         for i, (label, coupling) in enumerate(spectrum.coupling_time_delays.items()):
             plot_coupling_from_time_delay(ax, x, coupling, colors[i], label=rf'coupling_from_dt{label}')
+            if label in spectrum.coupling_time_delays_secondary:
+                coupling_secondary = spectrum.coupling_time_delays_secondary[label]
+                plot_coupling_from_time_delay(ax, x, coupling_secondary, colors[i])
+                ax.fill_between(x, coupling, coupling_secondary, color=colors[i], alpha=0.1)
             if not plot.include_legend:
-                x_label = x[np.argmax(coupling)]*0.15
-                y_label = spectrum.constraint*1.35
+                xmin, xmax = ax.get_xlim()
+                ymin, ymax = ax.get_ylim()
+                y_mid = (ymin * ymax) ** 0.5
+                vis = (x >= xmin) & (x <= xmax) & np.isfinite(coupling) & (coupling > 0)
+                if np.any(vis):
+                    x_vis, c_vis = x[vis], coupling[vis]
+                    idx = np.argmin(np.abs(np.log10(np.clip(c_vis, 1e-300, None)) - np.log10(y_mid)))
+                    x_default = x_vis[idx] * 0.25
+                else:
+                    x_default = (xmin * xmax) ** 0.5
+                override = plot.label_positions.get(f'dt_{label}')
+                x_label = (override[0] if override[0] is not None else x_default) if override else x_default
+                y_label = (override[1] if override[1] is not None else y_mid) if override else y_mid
                 label_coupling_from_time_delay(ax, x_label, y_label, label, color=colors[i])
         
+    def _plot_source_params(self, ax, source: Source, spectrum: SignalModel, plot: Plot):
+        """Show R, E_total, and sensitivity as a text label on the plot.
+
+        Args:
+            ax (matplotlib.axes.Axes): Axis to plot on.
+            source (Source): Source object containing source parameters.
+            spectrum (SignalModel): SignalModel containing sensitivity.
+            plot (Plot): Plot object; checks label_positions['source_params'] for override.
+        """
+        etot_msun = source.Etot / SOLAR_TO_EV
+        log_etot = np.log10(etot_msun)
+        if abs(log_etot - round(log_etot)) < 0.01:
+            exp = int(round(log_etot))
+            etot_str = (r'$E_{\rm tot} = M_{\odot}$' if exp == 0
+                        else rf'$E_{{\rm tot}} = 10^{{{exp}}}\ M_{{\odot}}$')
+        else:
+            etot_str = rf'$E_{{\rm tot}} = {etot_msun:.2g}\ M_{{\odot}}$'
+
+        R_pc = source.R
+        if R_pc >= 1e6:
+            R_str = rf'$R = {R_pc/1e6:.4g}\ {{\rm Mpc}}$'
+        else:
+            R_str = rf'$R = {R_pc/1e3:.4g}\ {{\rm kpc}}$'
+
+        txt = R_str + '\n' + etot_str
+        if spectrum.sensitivity is not None:
+            log_eta = np.log10(spectrum.sensitivity)
+            if abs(log_eta - round(log_eta)) < 0.01:
+                eta_str = rf'$\eta_{{\rm DM}} = 10^{{{int(round(log_eta))}}}$'
+            else:
+                eta_str = rf'$\eta_{{\rm DM}} = {spectrum.sensitivity:.2g}$'
+            txt += '\n' + eta_str
+
+        override = plot.label_positions.get('source_params')
+        if override:
+            pos_x, pos_y = override
+        else:
+            _, xmax = ax.get_xlim()
+            ymin, _ = ax.get_ylim()
+            pos_x = xmax / 10
+            pos_y = ymin * 5
+
+        bbox_style = dict(facecolor='white', alpha=0.0, edgecolor='white', boxstyle='round,pad=0.2')
+        ax.text(pos_x, pos_y, txt, bbox=bbox_style, fontsize=25, ha='right')
+
     def _plot_viable_region(self, ax, spectrum):
         """Fill the viable region of parameter space.
 
@@ -197,10 +266,17 @@ class OutputHandler:
         """
         mask = spectrum.w > spectrum.E_unc
         fill_x = spectrum.w[mask]
-        fill_y = np.minimum(
+        # Use secondary dt couplings (higher Dg_secondary curves) as upper bound if available,
+        # otherwise fall back to the primary curves
+        dt_source = spectrum.coupling_time_delays_secondary if spectrum.coupling_time_delays_secondary else spectrum.coupling_time_delays
+        dt_upper = np.maximum.reduce(list(dt_source.values()))[mask]
+        candidates = [
             np.full_like(fill_x, spectrum.constraint),
-            np.minimum.reduce(list(spectrum.coupling_time_delays.values()))[mask]
-        )
+            dt_upper
+        ]
+        if spectrum.d_screen_exp is not None:
+            candidates.append(spectrum.d_screen_exp[mask])
+        fill_y = np.minimum.reduce(candidates)
         plot_fill_region(ax, fill_x, fill_y, spectrum.coupling_probe[mask])
         
     def export_quantity(self, quantity, file):

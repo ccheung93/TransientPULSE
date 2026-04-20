@@ -27,9 +27,15 @@ def get_distance_label(R):
     
     return distance_label
 
-def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename):
-    """ Plots for linear coupling_order """
+def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename, dt_label_positions=None):
+    """ Plots for linear coupling_order
+
+    Args:
+        dt_label_positions (dict, optional): Override positions for delta_t labels.
+            Format: {'day': (x, y), 'yr': (x, y)}. Use None for any key to keep default.
+    """
     plot_E_unc(ax, E_unc)
+    label_E_unc(ax, E_unc)
     plot_MICROSCOPE(ax, Elist, Microscope_m)
     plot_FifthForce(ax, Elist, FifthForce_m)
     plot_coupling(ax, Elist, coupling)
@@ -37,7 +43,7 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     if m > 1e-20:
         pos_x, pos_y = m/200, 1e-7
         label_mass_exclusion(ax, pos_x, pos_y, facecolor='whitesmoke')
-    
+
     condition_mask = (Elist > E_unc) & (Elist > m * qday)
     fillregion_x = Elist[condition_mask]
     coupling_fill = coupling[condition_mask]
@@ -46,66 +52,81 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
 
     plot_coupling_from_time_delay(ax, Elist, dday, 'tab:purple')
     plot_coupling_from_time_delay(ax, Elist, dyear, 'tab:red')
-    label_coupling_from_time_delay(ax, m*qday/4, 1e-7, 'day', 'tab:purple')
-    label_coupling_from_time_delay(ax, m*qyear/4, 1e-7, 'yr', 'tab:red')
-    
+
+    pos_day = (dt_label_positions or {}).get('day') or (m*qday/4, 1e-7)
+    pos_yr  = (dt_label_positions or {}).get('yr')  or (m*qyear/4, 1e-7)
+    label_coupling_from_time_delay(ax, *pos_day, 'day', 'tab:purple')
+    label_coupling_from_time_delay(ax, *pos_yr,  'yr',  'tab:red')
+
     plot_parameter_list(ax, i, j, coupling_type, 'linear', filename)
 
-def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename):
-    """ Plots for quadratic coupling_order """
+def quad_plot(ax, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename, dt_label_positions=None):
+    """ Plots for quadratic coupling_order
+
+    Args:
+        dt_label_positions (dict, optional): Override positions for delta_t labels.
+            Format: {'day': (x, y), 'yr': (x, y)}. Use None for any key to keep default.
+    """
     plot_E_unc(ax, E_unc)
+    label_E_unc(ax, E_unc)
     if m > 1e-20:
         plot_mass_exclusion(ax, m)
         label_mass_exclusion(ax, m/200, 1e12, facecolor='whitesmoke')
-        
+
     plot_coupling(ax, Elist, coupling)
     plot_crit_couplings(ax, Elist, d_screen_earth, d_screen_exp, d_screen_atm)
-    label_critical_screening(ax, K_E, K_atm, coupling_type, filename)
+    label_critical_screening(ax, coupling_type, Elist, d_screen_earth, d_screen_atm, d_screen_exp)
     plot_coupling_from_time_delay(ax, Elist, dday30, 'tab:purple')
     plot_coupling_from_time_delay(ax, Elist, dyear30, 'tab:red')
     condition_mask = Elist > E_unc
     fillregion_x = Elist[condition_mask]
     coupling_fill = coupling[condition_mask]
     d_exp = d_screen_exp[condition_mask]
-    
+
     constraint = coupling_conversion(coupling_type=coupling_type, coupling_order=coupling_order)
     plot_supernova(ax, Elist, constraint, coupling_type)
-    
+
     if R < 1e5:
         dday30_fill = dday30[condition_mask]
         fillregion_y = np.minimum(d_exp, dday30_fill)
-        
-        if coupling_type == 'photon':
-            label_coupling_from_time_delay(ax, 6e-16, 9e26, 'day', 'tab:purple', rotation=37)
-            label_coupling_from_time_delay(ax, 3e-17, 1e27, 'yr', 'tab:red', rotation=37)
-        elif coupling_type == 'electron':
-            label_coupling_from_time_delay(ax, 6e-16, 8e26, 'day', 'tab:purple', rotation=39)
-            label_coupling_from_time_delay(ax, 3e-17, 8.5e26, 'yr', 'tab:red', rotation=39)
-        elif coupling_type == 'gluon':
-            label_coupling_from_time_delay(ax, 6e-16, 5e23, 'day', 'tab:purple', rotation=38)
-            label_coupling_from_time_delay(ax, 3e-17, 6e23, 'yr', 'tab:red', rotation=38)
+
+        default_positions = {
+            'photon':   {'day': (6e-16, 9e26), 'yr': (3e-17, 1e27),   'rotation': 37},
+            'electron': {'day': (6e-16, 8e26), 'yr': (3e-17, 8.5e26), 'rotation': 39},
+            'gluon':    {'day': (6e-16, 5e23), 'yr': (3e-17, 6e23),   'rotation': 38},
+        }
+        defaults = default_positions[coupling_type]
+        pos_day = (dt_label_positions or {}).get('day') or defaults['day']
+        pos_yr  = (dt_label_positions or {}).get('yr')  or defaults['yr']
+        label_coupling_from_time_delay(ax, *pos_day, 'day', 'tab:purple', rotation=defaults['rotation'])
+        label_coupling_from_time_delay(ax, *pos_yr,  'yr',  'tab:red',    rotation=defaults['rotation'])
     else:
         plot_coupling_from_time_delay(ax, Elist, dday1, 'tab:purple')
         plot_coupling_from_time_delay(ax, Elist, dyear1, 'tab:red')
 
         dday_fill = dday1[condition_mask]
         fillregion_y = np.minimum(d_exp, dday_fill)
-        
+
         plot_fill_coupling_from_time_delay(ax, Elist, dday1, dday30, dyear1, dyear30)
-        label_coupling_from_time_delay(ax, m*qday/4, 1e16, 'day', 'tab:purple')
-        label_coupling_from_time_delay(ax, m*qyear/4, 1e16, 'yr', 'tab:red')
-        
+        pos_day = (dt_label_positions or {}).get('day') or (m*qday/4, 1e16)
+        pos_yr  = (dt_label_positions or {}).get('yr')  or (m*qyear/4, 1e16)
+        label_coupling_from_time_delay(ax, *pos_day, 'day', 'tab:purple')
+        label_coupling_from_time_delay(ax, *pos_yr,  'yr',  'tab:red')
+
     plot_fill_region(ax, fillregion_x, fillregion_y, coupling_fill)
     plot_parameter_list(ax, i, j, coupling_type, 'quad', filename)
 
-def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=False):
-    """Generate dilatonic coupling plots 
+def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=False, dt_label_positions=None):
+    """Generate dilatonic coupling plots
 
     Args:
         R (float): distance between the source and the experiment
         Etot (float): total energy of the burst [M_sun]
         coupling_type (str): type of coupling ('photon', 'electron' or 'gluon')
         coupling_order (str): coupling order ('linear' or 'quadratic')
+        dt_label_positions (dict, optional): Override positions for delta_t labels.
+            Format: {'day': (x, y), 'yr': (x, y)}. Use None for any key to keep default.
+            Example: {'day': (1e-15, 5e22), 'yr': None}
     """
     
     # Benchmark parameters
@@ -157,7 +178,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
                 dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
                 
                 setup_axes(axij, xlims=(.3e-20, 0.9e-6), ylims=(1e-9, 0.9))
-                linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename)
+                linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename, dt_label_positions=dt_label_positions)
                 
             elif coupling_order == 'quad':
                 d_screen_earth = coupling_critical(Elist, R_E, RHO_E, m, K_E)
@@ -176,7 +197,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
                     'gluon': (.5e5, 8e30)
                 }[coupling_type]
                 setup_axes(axij, xlims=(.3e-20, 0.9e-6), ylims=ylims)
-                quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename)
+                quad_plot(axij, i, j, coupling, m, Elist, d_screen_earth, d_screen_exp, d_screen_atm, dday1, dyear1, dday30, dyear30, qyear, qday, R, E_unc, K_E, K_atm, coupling_type, coupling_order, filename, dt_label_positions=dt_label_positions)
 
             # Figure title and subplot time labels
             title = rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {int(np.log10(mass[0][j]))}$'

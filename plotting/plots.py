@@ -201,17 +201,16 @@ def label_E_unc(ax, E_unc=None, pos_x=None, pos_y=None, fontsize=35, color='tab:
         fontsize (int): Font size
         color (str): Text color
     """
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
     if pos_x is None:
-        if E_unc is not None:
-            pos_x = E_unc / 3
-        else:
-            xmin, xmax = ax.get_xlim()
-            pos_x = xmin * 5
+        pos_x = E_unc / 3 if E_unc is not None else xmin * 5
     if pos_y is None:
-        ymin, ymax = ax.get_ylim()
         pos_y = ymin * 10
 
-    add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize=fontsize, color=color) 
+    if not (xmin <= pos_x <= xmax and ymin <= pos_y <= ymax):
+        return
+    add_boxed_label(ax, pos_x, pos_y, r'$\omega\,t_{*} \lesssim \, 2\pi$', fontsize=fontsize, color=color)
     
 def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=35, color='black'):
     """ Plot the astrophysical constraint"""
@@ -223,10 +222,10 @@ def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fonts
     # Label constraint
     if pos_x is None:
         xmin, xmax = ax.get_xlim()
-        pos_x = xmax / 1e6
+        pos_x = xmax / 10
     if pos_y is None:
         pos_y = constraint * 1.25
-    ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize = fontsize, color = color)  
+    ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize=fontsize, color=color, ha='right')
 
 def plot_mass_exclusion(ax, m, alpha=1):
     """ Plot region excluded due to the scalar energy being less than its mass """
@@ -236,13 +235,15 @@ def plot_mass_exclusion(ax, m, alpha=1):
 def label_mass_exclusion(ax, pos_x=None, pos_y=None, fontsize=35, color='black', facecolor='white'):
     """ Label region in parameter space where omega < scalar field mass """
     txt = r'$\omega<m_{\phi}$'
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
     if pos_x is None:
-        xmin, xmax = ax.get_xlim()
         pos_x = xmin * 3
     if pos_y is None:
-        ymin, ymax = ax.get_ylim()
-        pos_y = (ymin + ymax) / 2
-    
+        pos_y = (ymin * ymax) ** 0.5  # geometric mean for log-scale axes
+
+    if not (xmin <= pos_x <= xmax and ymin <= pos_y <= ymax):
+        return
     add_boxed_label(ax, pos_x, pos_y, txt, fontsize=fontsize, color=color, facecolor=facecolor)
 
 def plot_supernova(ax, Elist, constraint, coupling_type, x_label=None, y_label=None):
@@ -255,22 +256,33 @@ def plot_supernova(ax, Elist, constraint, coupling_type, x_label=None, y_label=N
         'gluon': r'${\rm Supernova}~N N \rightarrow N N \phi \phi$'
     }[coupling_type]
     
-    constraint_fill = np.full_like(Elist, constraint)
-    ax.plot(Elist, constraint_fill, color = 'gray', linewidth = 3)
-    ax.fill_between(Elist, constraint_fill, 1e100, color = 'gray', alpha = 0.1)
-    
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    if not (ymin <= constraint <= ymax):
+        return
+
+    ax.axhline(constraint, color='gray', linewidth=3)
+    ax.axhspan(constraint, 1e100, color='gray', alpha=0.1)
+
     if x_label is None:
-        xmin, _ = ax.get_xlim()
         x_label = xmin * 3
     if y_label is None:
         y_label = constraint * 3
-    ax.text(x_label, y_label, label, fontsize = 30, color = 'black')
+    if xmin <= x_label <= xmax and ymin <= y_label <= ymax:
+        ax.text(x_label, y_label, label, fontsize=30, color='black')
         
-def label_critical_screening(ax, K_E, K_atm, coupling_type, filename):
-    """ Label critical screening lines """
-    distance_scales = ["10Mpc_", "10kpc_"]
-    
-    # Define labels for critical screening
+def label_critical_screening(ax, coupling_type, w, d_screen_earth, d_screen_atm, d_screen_exp,
+                             label_positions=None):
+    """Label critical screening lines near their respective curves.
+
+    Labels are placed at staggered x fractions of each curve's visible range so they
+    don't overlap. Y position tracks the actual curve value.
+
+    Args:
+        label_positions (dict, optional): Override positions per key.
+            Format: {'eth': (x, y), 'atm': (x, y), 'exp': (x, y)}.
+            Either value may be None to keep the auto-computed coordinate.
+    """
     crit_screening_labels = {
         "photon": {
             "eth": r'$d_{e,{\rm crit}}^{(2)\, \rm\oplus}$',
@@ -288,56 +300,33 @@ def label_critical_screening(ax, K_E, K_atm, coupling_type, filename):
             "exp": r'$d_{g,{\rm crit}}^{(2)\, \rm app}$'
         }
     }
-    
-    # Define positions of text for critical screening
-    crit_screening_positions = {
-        "photon": {
-            "10Mpc_": {
-                "eth": (3e-13, 2e12/K_E),
-                "atm": (1e-12, 5e21/K_atm),
-                "exp": (5e-11, 7e25/K_E)
-            },
-            "10kpc_": {
-                "eth": (7e-15, 2e13/K_E),
-                "atm": (2e-12, 1e19/K_atm),
-                "exp": (5e-11, 7e25/K_E)
-            }
-        },
-        
-        "electron": {
-            "10Mpc_": {
-                "eth": (2e-13, 2e11/K_E),
-                "atm": (2e-12, 1e19/K_atm),
-                "exp": (1e-10, 7e25/K_E)
-            },
-            "10kpc_": {
-                "eth": (5e-15, 2e9/K_E),
-                "atm": (2e-13, 5e21/K_atm),
-                "exp": (5e-11, 7e25/K_E)
-            }
-        },
-        
-        "gluon": {
-            "10Mpc_": {
-                "eth": (2e-13, 2e11/K_E),
-                "atm": (2e-12, 1e19/K_atm),
-                "exp": (5e-12, 7e25/K_E)
-            },
-            "10kpc_": {
-                "eth": (2e-14, 2e9/K_E),
-                "atm": (2e-12, 1e19/K_atm),
-                "exp": (5e-11, 7e25/K_E)
-            }
-        }
-    }
-    
-    for prefix in distance_scales:
-        if prefix in filename:
-            pos = crit_screening_positions[coupling_type][prefix]
-            lbl = crit_screening_labels[coupling_type]
-            ax.text(*pos["eth"], lbl["eth"], fontsize = 35, color = 'tab:blue')
-            ax.text(*pos["atm"], lbl["atm"], fontsize = 35, color = 'tab:blue')
-            ax.text(*pos["exp"], lbl["exp"], fontsize = 35, color = 'tab:blue')
+
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    lbl = crit_screening_labels[coupling_type]
+    label_positions = label_positions or {}
+
+    # Stagger labels at 20%, 50%, 80% of each curve's visible x range
+    x_fracs = {'eth': 0.2, 'atm': 0.5, 'exp': 0.8}
+    curves  = {'eth': d_screen_earth, 'atm': d_screen_atm, 'exp': d_screen_exp}
+
+    for key, frac in x_fracs.items():
+        curve = curves[key]
+        vis = (w >= xmin) & (w <= xmax) & np.isfinite(curve) & (curve >= ymin) & (curve <= ymax)
+        if not np.any(vis):
+            continue
+        x_vis = w[vis]
+        c_vis = curve[vis]
+        idx = int(frac * (len(x_vis) - 1))
+        px_auto = x_vis[idx] * 0.3
+        py_auto = c_vis[idx] * 4
+
+        override = label_positions.get(key)
+        px = (override[0] if override[0] is not None else px_auto) if override else px_auto
+        py = (override[1] if override[1] is not None else py_auto) if override else py_auto
+
+        if xmin <= px <= xmax and ymin <= py <= ymax:
+            ax.text(px, py, lbl[key], fontsize=35, color='tab:blue')
             
 def plot_parameter_list(ax, i, j, coupling_type, coupling_order, filename):
     """ Plot parameter lists in bottom right plot """
