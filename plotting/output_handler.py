@@ -266,10 +266,8 @@ class OutputHandler:
         """
         mask = spectrum.w > spectrum.E_unc
         fill_x = spectrum.w[mask]
-        # Use secondary dt couplings (higher Dg_secondary curves) as upper bound if available,
-        # otherwise fall back to the primary curves
-        dt_source = spectrum.coupling_time_delays_secondary if spectrum.coupling_time_delays_secondary else spectrum.coupling_time_delays
-        dt_upper = np.maximum.reduce(list(dt_source.values()))[mask]
+        # Upper bound must be below ALL dt coupling curves (most conservative)
+        dt_upper = np.minimum.reduce(list(spectrum.coupling_time_delays.values()))[mask]
         candidates = [
             np.full_like(fill_x, spectrum.constraint),
             dt_upper
