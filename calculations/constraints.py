@@ -310,7 +310,7 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
     if axion:
         # axions do not exhibit screening, so time delays correspond to a constant q value, regardless of the coupling
         Em = m * q  
-        return [0 if Ei < Em else 1e100 for Ei in E]
+        return np.array([0 if Ei < Em else 1e100 for Ei in E])
     
     # Galaxy number density [galaxies / Gpc^3]
     number_density = 0.006e9
