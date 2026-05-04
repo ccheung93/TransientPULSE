@@ -86,7 +86,10 @@ def setup_axes(ax, xlims, ylims):
     ax.xaxis.set_major_formatter(formatter)
     ax.yaxis.set_major_formatter(formatter)
     
-    ax.set_xticks(np.logspace(-20,-6,8))
+    log_min = int(np.ceil(np.log10(xlims[0])))
+    log_max = int(np.floor(np.log10(xlims[1])))
+    step = max(1, round((log_max - log_min) / 7))
+    ax.set_xticks([10**i for i in range(log_min, log_max + 1, step)])
     ax.set_xlim(*xlims)
     ax.set_ylim(*ylims)
     
