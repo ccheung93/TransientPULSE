@@ -205,6 +205,8 @@ class OutputHandler:
                     x_vis, c_vis = x[vis], coupling[vis]
                     idx = np.argmin(np.abs(np.log10(np.clip(c_vis, 1e-300, None)) - np.log10(y_mid)))
                     x_default = x_vis[idx] * 0.25
+                    if spectrum.E_unc is not None and x_default < spectrum.E_unc:
+                        x_default = spectrum.E_unc * 2
                 else:
                     x_default = (xmin * xmax) ** 0.5
                 override = plot.label_positions.get(f'dt_{label}')

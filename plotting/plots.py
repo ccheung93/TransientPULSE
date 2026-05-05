@@ -217,18 +217,23 @@ def label_E_unc(ax, E_unc=None, pos_x=None, pos_y=None, fontsize=35, color='tab:
     
 def plot_constraint(ax, constraint, coupling_type, pos_x=None, pos_y=None, fontsize=35, color='black'):
     """ Plot the astrophysical constraint"""
+    ymin, ymax = ax.get_ylim()
+    if constraint < ymin:
+        return
+
     ax.axhline(constraint, color = 'gray', linewidth = 3)
-    
+
     # Shade in the region up to the constraint
     ax.axhspan(constraint, 1e100, color = 'gray', alpha = 0.1)
-    
+
     # Label constraint
     if pos_x is None:
         xmin, xmax = ax.get_xlim()
         pos_x = xmax / 10
     if pos_y is None:
         pos_y = constraint * 1.25
-    ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize=fontsize, color=color, ha='right')
+    if ymin <= pos_y <= ymax:
+        ax.text(pos_x, pos_y, ALP_EXCLUSION_LABELS[coupling_type], fontsize=fontsize, color=color, ha='right')
 
 def plot_mass_exclusion(ax, m, alpha=1):
     """ Plot region excluded due to the scalar energy being less than its mass """
