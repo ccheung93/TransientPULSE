@@ -5,6 +5,7 @@ from inputs.source import Source
 from inputs.spectrum import SignalModel
 from utils.constants import SOLAR_TO_EV
 from .plots import *
+from .limits import load_microscope_value
 
 class OutputHandler:
     def __init__(self, plot: Plot = None, figsize=None):
@@ -61,12 +62,16 @@ class OutputHandler:
         self._init_figure(sources)
         if isinstance(sources, list) and isinstance(sources[0], list):
             self._plot_grid(sources, spectra, plot)
+            ref_source = sources[0][0]
         else:
             self._plot_single_panel(self.axs, sources, spectra, plot)
             setup_title(self.axs, rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {np.log10(sources.mass):.0f}$')
             setup_time_label(self.axs, rf'$t_*$ = {sources.tstar:g} s', padding=40)
             self._plot_source_params(self.axs, sources, spectra, plot)
-        
+            ref_source = sources
+
+        setup_axis_labels(self.fig, ref_source.coupling_order, ref_source.coupling_type)
+
         if plot.include_legend:
             self._add_shared_legend(plot)
             
@@ -142,7 +147,6 @@ class OutputHandler:
             xlims = self.xlims
             self.xlims = (source.mass, xlims[1])
         setup_axes(ax, self.xlims, self.ylims)
-        setup_axis_labels(self.fig, source.coupling_order, source.coupling_type)
         
     def _plot_exclusions(self, ax, source: Source, spectrum: SignalModel, plot: Plot):
         """Plot exclusion contraints on the parameter space.
@@ -170,6 +174,9 @@ class OutputHandler:
 
         if source.ULB_type == 'ALP':
             plot_constraint(ax, spectrum.constraint, source.coupling_type)
+        elif source.coupling_order == 'linear':
+            microscope_val = load_microscope_value(source.coupling_type)
+            plot_MICROSCOPE(ax, microscope_val)
         elif source.coupling_order == 'quad':
             plot_supernova(ax, spectrum.w, spectrum.constraint, source.coupling_type)
             if spectrum.d_screen_earth is not None:
@@ -239,7 +246,7 @@ class OutputHandler:
             R_str = rf'$R = {R_pc/1e3:.4g}\ {{\rm kpc}}$'
 
         txt = R_str + '\n' + etot_str
-        if spectrum.sensitivity is not None:
+        if spectrum.sensitivity is not None and source.ULB_type != 'ALP':
             log_eta = np.log10(spectrum.sensitivity)
             if abs(log_eta - round(log_eta)) < 0.01:
                 eta_str = rf'$\eta_{{\rm DM}} = 10^{{{int(round(log_eta))}}}$'

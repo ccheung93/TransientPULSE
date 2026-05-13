@@ -36,8 +36,9 @@ def linear_plot(ax, i, j, coupling, m, Elist, R, dday, dyear, qyear, qday, Micro
     """
     plot_E_unc(ax, E_unc)
     label_E_unc(ax, E_unc)
-    plot_MICROSCOPE(ax, Elist, Microscope_m)
-    plot_FifthForce(ax, Elist, FifthForce_m)
+    plot_MICROSCOPE(ax, Microscope_m[0])
+    if FifthForce_m is not None:
+        plot_FifthForce(ax, Elist, FifthForce_m)
     plot_coupling(ax, Elist, coupling)
     plot_mass_exclusion(ax, m)
     if m > 1e-20:
@@ -155,7 +156,10 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
 
     # Load constraints for linear coupling order
     if coupling_order == "linear":
-        Microscope_m, FifthForce_m = load_linear_constraints(Elist)
+        microscope_val = load_microscope_value(coupling_type)
+        Microscope_m = [microscope_val] * len(Elist)
+        fifthforce_val = load_fifthforce_value(coupling_type)
+        FifthForce_m = [fifthforce_val] * len(Elist) if fifthforce_val is not None else None
 
     # Setup plot
     set_matplotlib_style()
@@ -168,7 +172,7 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
             E_unc = E_from_uncert(t*SEC_TO_INEV)
             axij = ax[i][j]
             
-            coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int=YEAR_TO_SEC, t_int_DM=1e6, coupling_order=coupling_order)
+            coupling = coupling_probe(Etot, t, R, Elist, m, eta, t_int=DAY_TO_SEC, t_int_DM=1e6, coupling_order=coupling_order)
             
             qyear = q_from_time_delay(YEAR_TO_SEC*SPEED_OF_LIGHT, R*PC_TO_METERS)
             qday = q_from_time_delay(DAY_TO_SEC*SPEED_OF_LIGHT, R*PC_TO_METERS)

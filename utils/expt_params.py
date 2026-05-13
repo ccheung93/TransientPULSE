@@ -49,6 +49,17 @@ ENERGY_DENSITY_FRACTIONS = {
     }
 }
 
+MICROSCOPE_PATHS = {
+    'photon': 'data/Linear Scalar Photon/MICROSCOPE.txt',
+    'electron': 'data/Linear Scalar Electron/MICROSCOPE.txt',
+    'gluon': 'data/Linear Scalar Gluon/Microscope.txt',
+}
+
+FIFTHFORCE_PATHS = {
+    'photon': 'data/Linear Scalar Photon/FifthForce.txt',
+    'electron': 'data/Linear Scalar Electron/FifthForce.txt',
+}
+
 # Fractional sensitivity of the coupling type to a dark matter signal
 DM_SENSITIVITIES = {
     'photon': 1e-19/6000,

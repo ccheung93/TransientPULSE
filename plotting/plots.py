@@ -135,18 +135,20 @@ def add_boxed_label(ax, x, y, txt, rotation = 0, fontsize = 25,
                         )
             )
     
-def plot_MICROSCOPE(ax, range_x, microscope_m):
+def plot_MICROSCOPE(ax, microscope_val):
     """ Plot MICROSCOPE EP violation limits """
-    ax.plot(range_x, microscope_m, color = 'gray', linewidth = 2)
-    
-    # Shade in region indicating parameter space excluded by MICROSCOPE EP tests
-    upper_bound = np.full_like(range_x, 1e50, dtype=float)
-    ax.fill_between(range_x, microscope_m, upper_bound, color = 'gray', alpha = 0.1)
-    
-    # Place label for MICROSCOPE
-    pos_x = 3.5e-11
-    pos_y = microscope_m[0]*1.3
-    ax.text(pos_x, pos_y, r'${\rm MICROSCOPE}$', color = 'k')
+    ymin, ymax = ax.get_ylim()
+    if microscope_val < ymin:
+        return
+
+    ax.axhline(microscope_val, color='gray', linewidth=2)
+    ax.axhspan(microscope_val, 1e100, color='gray', alpha=0.1)
+
+    pos_y = microscope_val * 1.3
+    if ymin <= pos_y <= ymax:
+        _, xmax = ax.get_xlim()
+        pos_x = xmax / 10
+        ax.text(pos_x, pos_y, r'${\rm MICROSCOPE}$', color='k', ha='right')
 
 def plot_FifthForce(ax, range_x, fifthForce_m):
     """ Plot fifth-force limits """
