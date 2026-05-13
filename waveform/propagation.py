@@ -182,7 +182,7 @@ def plot_waveform(t_duration, phi_signal, filename='plots/waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = None, cutoff_max = None, filename='plots/spectrogram_plot.pdf'):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -271,7 +271,10 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min = 
 
     plt.tight_layout()
     plt.savefig(filename)
-    plt.close()
+    if show:
+        plt.show()
+    else:
+        plt.close()
 
     end_time = time.time()
     logger.info(f"Saved {filename} in {end_time - start_time:.2f}s")
