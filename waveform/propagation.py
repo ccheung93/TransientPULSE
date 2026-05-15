@@ -182,7 +182,7 @@ def plot_waveform(t_duration, phi_signal, filename='plots/waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False, mass=None, burst_duration=None, distance=None):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -193,6 +193,10 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
         E (np.ndarray): Energy array [eV]
         spectrogram_array (np.ndarray): 2D array (energy × time) of energy density
         filename (str): Output filename for plot
+        show (bool): If True, display plot inline
+        mass (float, optional): Scalar field mass [eV] for legend label
+        burst_duration (float, optional): Burst duration [s] for legend label
+        distance (float, optional): Source distance [kpc] for legend label
     """
     start_time = time.time()
     if os.path.dirname(filename):
@@ -235,7 +239,7 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
     ax.set_xlabel("Time (s)", fontsize=40)
     ax.set_ylabel(r"Frequency $f$ [Hz]", fontsize=40)
     ax.tick_params(labelsize=40)
-    
+
     # Calculate densities
     cutoff_min = cutoff_min if cutoff_min else 0
     cutoff_max = cutoff_max if cutoff_max else t_max
@@ -267,6 +271,19 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
     ax_y.fill_between([0,rho_f.max()*2],[f_avg - std_f,f_avg - std_f],[f_avg + std_f,f_avg + std_f], color = 'tab:red',alpha = 0.2)
     ax_y.set_xscale('log')
     ax_y.set_xlabel(r'$\rho(f)$')
+
+    if mass is not None or burst_duration is not None or distance is not None:
+        lines = []
+        if mass is not None:
+            log_m = np.log10(mass)
+            lines.append(rf'$m_\phi = 10^{{{log_m:.0f}}}\ {{\rm eV}}$')
+        if burst_duration is not None:
+            lines.append(rf'$t_* = {burst_duration:.3g}\ {{\rm s}}$')
+        if distance is not None:
+            lines.append(rf'$R = {distance:.3g}\ {{\rm kpc}}$')
+        ax_y.text(0.5, 1.05, '\n'.join(lines), transform=ax_y.transAxes,
+                  fontsize=35, ha='center', va='bottom', clip_on=False,
+                  bbox=dict(facecolor='white', alpha=0.0, edgecolor='none', boxstyle='round,pad=0.3'))
     
 
     plt.tight_layout()
