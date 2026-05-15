@@ -133,7 +133,6 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
     # Benchmark parameters
     mass_benchmarks = [1e-21, 1e-18] # mass benchmarks in eV
     ts_benchmarks = [1, 1e2] # burst duration benchmarks in seconds
-    m_bench = 1e-21 # in eV
     
     mass = [[mass_benchmarks[0], mass_benchmarks[1]],
             [mass_benchmarks[0], mass_benchmarks[1]]]
