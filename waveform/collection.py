@@ -29,23 +29,23 @@ class WaveformCollection:
     def _load_density_profile(self, xi=None, xf=None):
         """
         Load and interpolate density profile then select a range
-        
+
         Args:
             xi (float): initial density profile position
             xf (float): final density profile position
-        
+
         Returns:
             ([np.ndarray, np.ndarray]): Density profile (x=position, y=density at position)
         """
         x, rho = read_medium_data(self.propagation.density_profile_path, i_R=0, i_rho=2)
         x_interp, rho_interp = interpolate_data(x, rho, self.propagation.density_num_points)
-        
+
         if (xi is None and xf is not None) or (xf is None and xi is not None):
             return ValueError('Include both xi and xf if defining range for density profile.')
-        
+
         if xi is not None and xi < x[0]:
             return ValueError('xi precedes initial position value in inputted density profile.')
-        
+
         if xf is not None and xf > x[-1]:
             return ValueError('xf exceeds final position value in inputted density profile.')
 
@@ -53,11 +53,11 @@ class WaveformCollection:
             mask = np.where((x_interp >= xi) & (x_interp <= xf))
             x_interp = x_interp[mask]
             rho_interp = rho_interp[mask]
-        
+
         x_interp = x_interp* KPC_TO_INEV
         rho_interp = rho_interp * GCM3_TO_EV4
-        
-        self.density_profile = [x_interp, rho_interp]            
+
+        self.density_profile = [x_interp, rho_interp]
 
     def _compute_global_time_range(self, num_steps):
         """
