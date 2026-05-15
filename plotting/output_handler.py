@@ -133,7 +133,10 @@ class OutputHandler:
         self._setup_axes(ax, source, plot)
         self._plot_exclusions(ax, source, spectrum, plot)
         self._plot_couplings(ax, x, spectrum, plot)
-        self._plot_viable_region(ax, spectrum)
+        microscope_val = None
+        if source.ULB_type != 'ALP' and source.coupling_order == 'linear':
+            microscope_val = load_microscope_value(source.coupling_type)
+        self._plot_viable_region(ax, spectrum, microscope_val=microscope_val)
     
     def _setup_axes(self, ax, source, plot):
         """Set up the axis scale, limits and labels.
@@ -266,12 +269,13 @@ class OutputHandler:
         bbox_style = dict(facecolor='white', alpha=0.0, edgecolor='white', boxstyle='round,pad=0.2')
         ax.text(pos_x, pos_y, txt, bbox=bbox_style, fontsize=25, ha='right')
 
-    def _plot_viable_region(self, ax, spectrum):
+    def _plot_viable_region(self, ax, spectrum, microscope_val=None):
         """Fill the viable region of parameter space.
 
         Args:
             ax (matplotlib.axes.Axes): Axis to plot on.
             spectrum (SignalModel): SignalModel object containing energies and computed couplings.
+            microscope_val (float, optional): MICROSCOPE upper bound; included when set.
         """
         mask = spectrum.w > spectrum.E_unc
         fill_x = spectrum.w[mask]
@@ -283,6 +287,8 @@ class OutputHandler:
         ]
         if spectrum.d_screen_exp is not None:
             candidates.append(spectrum.d_screen_exp[mask])
+        if microscope_val is not None:
+            candidates.append(np.full_like(fill_x, microscope_val))
         fill_y = np.minimum.reduce(candidates)
         plot_fill_region(ax, fill_x, fill_y, spectrum.coupling_probe[mask])
         
