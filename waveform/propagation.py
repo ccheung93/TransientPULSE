@@ -278,11 +278,11 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
             log_m = np.log10(mass)
             lines.append(rf'$m_\phi = 10^{{{log_m:.0f}}}\ {{\rm eV}}$')
         if burst_duration is not None:
-            lines.append(rf'$t_* = {burst_duration:.3g}\ {{\rm s}}$')
+            lines.append(rf'$\,t_* \, \hspace{{0.05}} = {burst_duration:.3g}\ {{\rm s}}$')
         if distance is not None:
-            lines.append(rf'$R = {distance:.3g}\ {{\rm kpc}}$')
-        ax_y.text(0.5, 1.05, '\n'.join(lines), transform=ax_y.transAxes,
-                  fontsize=35, ha='center', va='bottom', clip_on=False,
+            lines.append(rf'$\, R ~ \,  = {distance:.3g}\ {{\rm kpc}}$')
+        ax_y.text(0.05, 1.05, '\n'.join(lines), transform=ax_y.transAxes, 
+                  fontsize=35, ha='left', va='bottom', clip_on=False, 
                   bbox=dict(facecolor='white', alpha=0.0, edgecolor='none', boxstyle='round,pad=0.3'))
     
 
