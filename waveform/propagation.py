@@ -182,7 +182,7 @@ def plot_waveform(t_duration, phi_signal, filename='plots/waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False, mass=None, burst_duration=None, distance=None):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False, mass=None, burst_duration=None, distance=None,xscale = 'linear', yscale = 'linear'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -238,6 +238,10 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
 
     ax.set_xlabel("Time (s)", fontsize=40)
     ax.set_ylabel(r"Frequency $f$ [Hz]", fontsize=40)
+    if xscale == 'log':
+        ax.set_xscale('log')
+    if yscale == 'log':
+        ax.set_yscale('log')
     ax.tick_params(labelsize=40)
 
     # Calculate densities

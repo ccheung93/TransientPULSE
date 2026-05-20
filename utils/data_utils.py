@@ -34,10 +34,10 @@ def read_medium_data(filename, i_R=0, i_rho=1):
     return np.array(x), np.array(rho)
 
 
-def interpolate_data(x, y, num):
-    """Interpolates data with linearly spacing
+def interpolate_data(x, y, num, interp_scale = 'linear'):
+    """Interpolates data with linear or logarithmic spacing
 
-    Creates linearly-spaced interpolation points between the first and last
+    Creates linearly-spaced (or log-spaced) interpolation points between the first and last
     x values, then linearly interpolates the y values at these points.
 
     Args:
@@ -49,8 +49,12 @@ def interpolate_data(x, y, num):
         tuple: (xnew, ynew) - Interpolated x and y arrays with num points each
     """
     # Create linearly-spaced x values
-    xnew = np.linspace(x[0], x[-1], num)
-
+    if interp_scale == 'linear':  
+        xnew = np.linspace(x[0], x[-1], num)
+        
+    if interp_scale == 'log':
+        xnew = np.logspace(np.log10(x[0]), np.log10(x[-1]), num)
+   
     # Interpolate y values at new x positions
     f = scipy.interpolate.interp1d(x, y, kind='linear', fill_value='extrapolate')
     ynew = f(xnew)
