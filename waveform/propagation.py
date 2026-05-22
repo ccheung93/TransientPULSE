@@ -120,17 +120,17 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     t_start = t_arrivals[i1] + delta_t_s[0]     # Defined by fastest momentum mode in the momentum bin
     t_end = t_arrivals[i0] + delta_t_s[1]       # Defined by the slowest momentum mode in the bin
 
-    # Width of momentum bin
-    delta_p = p[1] - p[0]
-    
-    spec_value = 1/(4*PI*R**2 * ts_eV) * delta_p
-    
+    # Per-pair bin widths using the valid pair indices
+    delta_p_pairs = p[i1] - p[i0]
+    spec_value_arr = 1/(4*PI*R**2 * ts_eV) * delta_p_pairs
+
     spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
-    
+
     for i, (i0_idx, p_a, A_a, E_a) in enumerate(zip(i0, p_avg, A_avg, E_avg)):
         time_mask = np.where((t_duration>t_start[i]) & (t_duration<t_end[i]))
         time_window = t_duration[time_mask]
 
+        spec_value = spec_value_arr[i]
         if len(time_mask[0]) > 0:
             spectrogram_array[i0_idx][time_mask] += spec_value * (A_a*E_a/p_a)
         else:
