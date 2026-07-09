@@ -302,10 +302,10 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
     
     arrival_window = [t_duration[np.nonzero(rho_t)][0], t_max]
     
-    return rho_t_avg, arrival_window
+    return rho_t_avg, f_avg, std_f, arrival_window
 
 
-def export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=None,
+def export_source_parameters(avg_density, f_avg, std_f, burst_duration, R, mass, arrival_window=None,
                               coupling=None, K=None,
                               coupling_type='', coupling_order='',
                               to_file=False, filename=None):
@@ -360,7 +360,9 @@ def export_source_parameters(avg_density, burst_duration, R, mass, arrival_windo
         'K': K,
         'COUPLING_TYPE': coupling_type,
         'COUPLING_ORDER': coupling_order,
-        'AVG_DENSITY': avg_density
+        'AVG_DENSITY': avg_density,
+        'F_AVG': f_avg,
+        'STD_F': std_f
     }
 
     if to_file:

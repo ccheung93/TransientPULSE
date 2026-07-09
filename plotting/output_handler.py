@@ -50,7 +50,7 @@ class OutputHandler:
                 figsize = self.figsize
             self.fig, self.axs = plt.subplots(figsize=figsize)
     
-    def plot_parameter_space(self, sources, spectra, plot, save_path=None):
+    def plot_parameter_space(self, sources, spectra, plot, save_path=None, wmin=None, wmax=None):
         """Main entry point to generate a plot.
 
         Args:
@@ -64,7 +64,7 @@ class OutputHandler:
             self._plot_grid(sources, spectra, plot)
             ref_source = sources[0][0]
         else:
-            self._plot_single_panel(self.axs, sources, spectra, plot)
+            self._plot_single_panel(self.axs, sources, spectra, plot, wmin=wmin, wmax=wmax)
             setup_title(self.axs, rf'$\log_{{10}}(m_{{\phi}}/\mathrm{{eV}}) = {np.log10(sources.mass):.0f}$')
             setup_time_label(self.axs, rf'$t_*$ = {sources.tstar:g} s', padding=40)
             self._plot_source_params(self.axs, sources, spectra, plot)
@@ -120,7 +120,7 @@ class OutputHandler:
                     
                 ax.tick_params(axis='both', which='both', labelsize=25)
         
-    def _plot_single_panel(self, ax, source: Source, spectrum: SignalModel, plot: Plot):
+    def _plot_single_panel(self, ax, source: Source, spectrum: SignalModel, plot: Plot, wmin: float = None, wmax: float = None):
         """Plot a single panel of the parameter space.
 
         Args:
@@ -132,11 +132,11 @@ class OutputHandler:
         x = spectrum.w
         self._setup_axes(ax, source, plot)
         self._plot_exclusions(ax, source, spectrum, plot)
-        self._plot_couplings(ax, x, spectrum, plot)
+        self._plot_couplings(ax, x, spectrum, plot, wmin=wmin, wmax=wmax)
         microscope_val = None
         if source.ULB_type != 'ALP' and source.coupling_order == 'linear':
             microscope_val = load_microscope_value(source.coupling_type)
-        self._plot_viable_region(ax, spectrum, microscope_val=microscope_val)
+        self._plot_viable_region(ax, spectrum, microscope_val=microscope_val, wmin=wmin, wmax=wmax)
     
     def _setup_axes(self, ax, source, plot):
         """Set up the axis scale, limits and labels.
@@ -189,7 +189,7 @@ class OutputHandler:
                                          spectrum.d_screen_earth, spectrum.d_screen_atm,
                                          spectrum.d_screen_exp, label_positions=crit_label_pos)
     
-    def _plot_couplings(self, ax, x, spectrum: SignalModel, plot: Plot):
+    def _plot_couplings(self, ax, x, spectrum: SignalModel, plot: Plot, wmin=None, wmax=None):
         """Plot the coupling curve and time delay lines.
 
         Args:
@@ -198,7 +198,7 @@ class OutputHandler:
             spectrum (SignalModel): SignalModel object containing computed couplings.
             plot (Plot): Plot object containing plot configurations.
         """
-        plot_coupling(ax, x, spectrum.coupling_probe, label='coupling')
+        plot_coupling(ax, x, spectrum.coupling_probe, label='coupling', wmin=wmin, wmax=wmax)
         colors = ['tab:purple', 'tab:red', 'tab:orange', 'tab:green', 'tab:blue']
         for i, (label, coupling) in enumerate(spectrum.coupling_time_delays.items()):
             plot_coupling_from_time_delay(ax, x, coupling, colors[i], label=rf'coupling_from_dt{label}')
@@ -269,7 +269,7 @@ class OutputHandler:
         bbox_style = dict(facecolor='white', alpha=0.0, edgecolor='white', boxstyle='round,pad=0.2')
         ax.text(pos_x, pos_y, txt, bbox=bbox_style, fontsize=25, ha='right')
 
-    def _plot_viable_region(self, ax, spectrum, microscope_val=None):
+    def _plot_viable_region(self, ax, spectrum, microscope_val=None, wmin=None, wmax=None):
         """Fill the viable region of parameter space.
 
         Args:
@@ -290,7 +290,7 @@ class OutputHandler:
         if microscope_val is not None:
             candidates.append(np.full_like(fill_x, microscope_val))
         fill_y = np.minimum.reduce(candidates)
-        plot_fill_region(ax, fill_x, fill_y, spectrum.coupling_probe[mask])
+        plot_fill_region(ax, fill_x, fill_y, spectrum.coupling_probe[mask], wmin=wmin, wmax=wmax)
         
     def export_quantity(self, quantity, file):
         """Export quantity to CSV file.

@@ -8,7 +8,7 @@ from inputs.experiment import Experiment
 class SignalModel:
     """Class representing an emission signal model for constraint calculations."""
 
-    def __init__(self, file: str = None, source: Source = None, experiment: Experiment = None, aw: float = 1):
+    def __init__(self, file: str = None, source: Source = None, experiment: Experiment = None, aw: float = 1,  wmin: float = None, wmax: float = None):
         """Initialize a signal model from either a file or a source model
 
         Args:
@@ -95,7 +95,7 @@ class SignalModel:
         if file:
             self.load_from_csv(file)
         elif source:
-            self.generate_model(source)
+            self.generate_model(source, wmin, wmax)
 
         # Compute derived quantities if using source model
         if source:
@@ -140,16 +140,19 @@ class SignalModel:
 
         return aw_float
     
-    def generate_model(self, source):
+    def generate_model(self, source, wmin=None, wmax=None):
         """Create a synthetic spectrum from a source model.
 
         Args:
             source (Source): Instance of the Source class containing source parameters. 
                 Imported from `source.py`.
         """
-        # Create synthetic spectrum from source
-        wmp_contour = np.logspace(0, 30, 1000)
-        self.w = source.mass*wmp_contour
+        if wmin and wmax:
+            self.w = np.logspace(np.log10(wmin), np.log10(wmax), 1000)
+        else:
+            # Create synthetic spectrum from source
+            wmp_contour = np.logspace(0, 30, 1000)
+            self.w = source.mass*wmp_contour
         
     def _compute_derived_quantities(self, source, experiment):
         """Compute derived physical quantities from the model spectrum and source.

@@ -171,13 +171,18 @@ def label_coupling_from_time_delay(ax, pos_x, pos_y, time_label, color, fontsize
     label = rf'$\delta t\, \gtrsim \, 1~{{\rm {time_label}}}~\uparrow$'
     add_boxed_label(ax, pos_x, pos_y, label, rotation = rotation, fontsize = fontsize, color = color)
     
-def plot_fill_region(ax, fillregion_x, fillregion_y, coupling):
+def plot_fill_region(ax, fillregion_x, fillregion_y, coupling, wmin=None, wmax=None):
     """ Shade in the viable parameter space """
-    ax.fill_between(fillregion_x, coupling, fillregion_y, where = coupling < fillregion_y, color = 'tab:green', alpha = 0.3)
+    if not wmin and not wmax:
+        ax.fill_between(fillregion_x, coupling, fillregion_y, where = coupling < fillregion_y, color = 'tab:green', alpha = 0.3)
 
-def plot_coupling(ax, Elist, coupling, label=None):
+def plot_coupling(ax, Elist, coupling, label=None, wmin=None, wmax=None):
     """ Plot the projected sensitivity of future experiments """
-    ax.plot(Elist, coupling, c = 'k', linewidth = 2, alpha = 1, label = label)
+    if wmin and wmax:
+        mask = (Elist >= wmin) & (Elist <= wmax)
+        ax.plot(Elist[mask], coupling[mask], c = 'k', linewidth = 2, alpha = 1, label = label)
+    else:
+        ax.plot(Elist, coupling, c = 'k', linewidth = 2, alpha = 1, label = label)
     
 def plot_crit_couplings(ax, range_x, d_earth, d_exp, d_atm):
     """ Plot the critical screening from the Earth, atmosphere, and experimental apparatus """
