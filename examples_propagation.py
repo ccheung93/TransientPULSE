@@ -45,14 +45,14 @@ def example_new_architecture_single_gaussian(filename=None):
     results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram)
 
     # Plot spectrogram
-    avg_density, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
+    avg_density, f_avg, std_f, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("Single Gaussian propagation complete. Spectrogram saved.")
 
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=arrival_window,
+    export_source_parameters(avg_density, f_avg, std_f, burst_duration, R, mass, arrival_window=arrival_window,
                              to_file=True, filename='gaussian.param')
 
     return results
@@ -100,14 +100,14 @@ def example_new_architecture_time_varying(filename=None):
     results = collection.propagate_all(N_points_spectrogram=N_points_spectrogram, save_waveform=False)
 
     # Plot spectrogram
-    avg_density, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
+    avg_density, f_avg, std_f, arrival_window = plot_spectrogram(N_points_spectrogram, results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info(f"Time-varying propagation complete with {N_time_steps} steps")
 
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=arrival_window,
+    export_source_parameters(avg_density, f_avg, std_f, burst_duration, R, mass, arrival_window=arrival_window,
                              to_file=True, filename='gaussian_tv.param')
 
     return results
@@ -145,14 +145,14 @@ def example_bosenova_csv(filename=None):
     results = collection.propagate_all(N_points_spectrogram=None, save_waveform=False)
 
     # Plot spectrogram
-    avg_density, arrival_window = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
+    avg_density, f_avg, std_f, arrival_window = plot_spectrogram(results['N_points'], results['t_min'], results['t_max'],
                      results['E'], results['spectrogram'], filename=filename)
 
     logger.info("CSV (Bosenova) spectrum propagation complete. Spectrogram saved.")
 
     # Export source parameters
     R = collection.density_profile[0][-1] - collection.density_profile[0][0]
-    export_source_parameters(avg_density, burst_duration, R, mass, arrival_window=arrival_window,
+    export_source_parameters(avg_density, f_avg, std_f, burst_duration, R, mass, arrival_window=arrival_window,
                              to_file=True, filename='bosenova.param')
 
     return results
