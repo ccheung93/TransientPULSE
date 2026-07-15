@@ -1,14 +1,31 @@
 import numpy as np
-from propagation import *
+from calculations.constraints import *
+from utils.constants import *
+from utils.expt_params import *
 from inputs.source import Source
 from inputs.experiment import Experiment
 
-class Spectrum:
-    """Class representing an emission spectrum."""
-    
-    def __init__(self, file: str = None, source: Source = None, experiment: Experiment = None, aw: float = 1):
+class SignalModel:
+    """Class representing an emission signal model for constraint calculations."""
+
+    def __init__(self, file: str = None, source: Source = None, experiment: Experiment = None, aw: float = 1,  wmin: float = None, wmax: float = None):
+        """Initialize a signal model from either a file or a source model
+
+        Args:
+            file (str, optional): Path to CSV file containing spectrum data. Defaults to None.
+            source (Source, optional): Source object for generating model spectrum. Defaults to None.
+            experiment (Experiment, optional): Experiment object (required when source is provided). Defaults to None.
+            aw (float, optional): Wavepacket uncertainty parameter. Defaults to 1.
+
+        Raises:
+            TypeError: If arguments are not of expected types
+            ValueError: If neither file nor source is provided, or if source is provided without experiment
+        """
+        # Validate aw parameter
+        self.aw = self._validate_aw(aw)
+
+        # Initialize attributes
         self.w = None
-        self.aw = aw
         self.dw = 0
         self.rho = None
         self.trf = None
@@ -16,35 +33,126 @@ class Spectrum:
         self.constraint = None
         self.coupling_probe = None
         self.coupling_time_delays = {}
-        self.is_axion = True if source.ULB_type == 'ALP' else False
-        
+        self.coupling_time_delays_secondary = {}
+        self.d_screen_earth = None
+        self.d_screen_atm = None
+        self.d_screen_exp = None
+        self.sensitivity = None
+
+        # Validate input combination
+        if file is not None and source is not None:
+            raise ValueError(
+                "Cannot specify both 'file' and 'source'. Choose one:\n"
+                "  - file='path/to/spectrum.csv' for loading from file\n"
+                "  - source=Source(...) for generating model spectrum"
+            )
+
+        if file is None and source is None:
+            raise ValueError(
+                "Must specify either 'file' or 'source'.\n"
+                "Examples:\n"
+                "  - SignalModel(file='path/to/spectrum.csv')\n"
+                "  - SignalModel(source=Source(...), experiment=Experiment(...))"
+            )
+
+        # Validate source type if provided
+        if source is not None:
+            if not isinstance(source, Source):
+                raise TypeError(
+                    f"source must be a Source object, got {type(source).__name__}.\n"
+                    f"Example: source=Source(Etot=1e-2, mass=1e-20, tstar=1, R=1e4, "
+                    f"ULB_type='scalar', coupling_type='electron')"
+                )
+
+            # Check for required experiment
+            if experiment is None:
+                raise ValueError(
+                    "experiment must be provided when using a source.\n"
+                    "Example: experiment=Experiment(integration_time=86400, "
+                    "integration_time_DM=31536000, sensitivity=1e-18, time_delays={'day': 86400})"
+                )
+
+            # Validate experiment type
+            if not isinstance(experiment, Experiment):
+                raise TypeError(
+                    f"experiment must be an Experiment object, got {type(experiment).__name__}.\n"
+                    f"Example: experiment=Experiment(integration_time=86400, "
+                    "integration_time_DM=31536000, sensitivity=1e-18, time_delays={'day': 86400})"
+                )
+
+            self.is_axion = True if source.ULB_type == 'ALP' else False
+
+        # Validate file type if provided
+        if file is not None:
+            if not isinstance(file, str):
+                raise TypeError(
+                    f"file must be a string path, got {type(file).__name__}.\n"
+                    f"Example: file='data/BosonStarSpectrumRelOnly.txt'"
+                )
+            self.is_axion = False  # Default for file-based loading
+
+        # Load or generate spectrum
         if file:
             self.load_from_csv(file)
         elif source:
-            self.generate_model(source)
-        else:
-            raise ValueError('Expecting either a file directory or a source model.')
-        
+            self.generate_model(source, wmin, wmax)
+
+        # Compute derived quantities if using source model
         if source:
-            if experiment is None:
-                raise ValueError('Experiment must be provided when using a source.')
+            self.sensitivity = experiment.sensitivity
             self._compute_derived_quantities(source, experiment)
-            self.coupling_probe = coupling_probe(source.Etot, source.tstar, source.R, self.w, source.mass, experiment.sensitivity, aw=1, t_int=experiment.integration_time, t_int_DM=experiment.integration_time_DM, coupling_type=source.coupling_type, coupling_order=source.coupling_order, axion=self.is_axion)
-            
-    def load_from_csv(self, file):
-        # Load spectrum data from file
-        raise NotImplementedError('To be implemented...')
+            self.coupling_probe = coupling_probe(
+                source.Etot, source.tstar, source.R, self.w, source.mass,
+                experiment.sensitivity, aw=1, t_int=experiment.integration_time,
+                t_int_DM=experiment.integration_time_DM, coupling_type=source.coupling_type,
+                coupling_order=source.coupling_order, axion=self.is_axion
+            )
+
+    @staticmethod
+    def _validate_aw(aw):
+        """Validate wavepacket uncertainty parameter
+
+        Args:
+            aw: The value to validate
+
+        Returns:
+            float: The validated value
+
+        Raises:
+            TypeError: If aw is not numeric
+            ValueError: If aw is not >= 1
+        """
+        try:
+            aw_float = float(aw)
+        except (TypeError, ValueError):
+            raise TypeError(
+                f"aw must be a number, got {type(aw).__name__}.\n"
+                f"aw is the wavepacket uncertainty parameter (aw >= 1).\n"
+                f"Example: aw=1 (minimal uncertainty)"
+            )
+
+        if aw_float < 1:
+            raise ValueError(
+                f"aw must be >= 1 (uncertainty principle), got {aw_float}.\n"
+                f"aw represents the wavepacket uncertainty: dw * t_star = aw >= 1.\n"
+                f"Example: aw=1 (minimal uncertainty, Gaussian wavepacket)"
+            )
+
+        return aw_float
     
-    def generate_model(self, source):
+    def generate_model(self, source, wmin=None, wmax=None):
         """Create a synthetic spectrum from a source model.
 
         Args:
             source (Source): Instance of the Source class containing source parameters. 
                 Imported from `source.py`.
         """
-        # Create synthetic spectrum from source
-        wmp_contour = np.logspace(0, 30, 1000)
-        self.w = source.mass*wmp_contour
+        if wmin and wmax:
+            self.w = np.logspace(np.log10(wmin), np.log10(wmax), 1000)
+        else:
+            # Create synthetic spectrum from source
+            wmp_contour = np.logspace(0, 30, 1000)
+            self.w = source.mass*wmp_contour
         
     def _compute_derived_quantities(self, source, experiment):
         """Compute derived physical quantities from the model spectrum and source.
@@ -76,7 +184,25 @@ class Spectrum:
         )
         
         self.E_unc = E_from_uncert(t_star)
-        
-        self.constraint = coupling_conversion(coupling_type=source.coupling_type, axion=self.is_axion)
+
+        self.constraint = coupling_conversion(
+            coupling_type=source.coupling_type,
+            coupling_order=source.coupling_order,
+            axion=self.is_axion
+        )
+        K = experiment.K if experiment.K is not None else ENERGY_DENSITY_FRACTIONS['space'].get(source.coupling_type, 1.0)
         for label, dt in experiment.time_delays.items():
-            self.coupling_time_delays[label] = coupling_from_time_delay(dt, source.R, source.mass, self.w, 1e-6, 0, axion=self.is_axion)
+            self.coupling_time_delays[label] = coupling_from_time_delay(
+                dt, source.R, source.mass, self.w, experiment.Dg, K, axion=self.is_axion
+            )
+        if experiment.Dg_secondary is not None:
+            for label, dt in experiment.time_delays.items():
+                self.coupling_time_delays_secondary[label] = coupling_from_time_delay(
+                    dt, source.R, source.mass, self.w, experiment.Dg_secondary, K, axion=self.is_axion
+                )
+        if not self.is_axion and source.coupling_order == 'quad':
+            K_E = ENERGY_DENSITY_FRACTIONS['earth'].get(source.coupling_type, 1.0)
+            K_atm = ENERGY_DENSITY_FRACTIONS['atmosphere'].get(source.coupling_type, 1.0)
+            self.d_screen_earth = coupling_critical(self.w, R_E, RHO_E, source.mass, K_E)
+            self.d_screen_atm = coupling_critical(self.w, R_ATM, RHO_ATM, source.mass, K_atm)
+            self.d_screen_exp = coupling_critical(self.w, R_EXP, RHO_EXP, source.mass, K_E)
