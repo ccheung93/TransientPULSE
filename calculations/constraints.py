@@ -285,7 +285,7 @@ def q_from_time_delay(dt, R):
     """
     return 1 / np.sqrt(1 - 1 / (1 + dt / R)**2)
 
-def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
+def coupling_from_time_delay(dt, R, m, E, Dg, K, Ng=None, axion=False):
     """ Calculate coupling from a time delay 
         For scalars: calculates d_i^(2) from Eq.39 in arXiv:2502.08716v1
         For axions: coupling corresponds to a constant value since axions do not exhibit screening
@@ -297,6 +297,7 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
         E (array_like): energies [eV]
         Dg (float): distance per galaxy of signal propagation [pc]
         K (float): energy density fraction [unitless]
+        Ng (float): number of galaxies phi approaches during propagation [unitless]
         axion (boolean): calculating coupling for axions or not
         
     Returns:
@@ -314,7 +315,7 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, axion=False):
     
     # Galaxy number density [galaxies / Gpc^3]
     number_density = 0.006e9
-    Ng = number_density * (R/GIGA_TO_BASE)**3
+    Ng = Ng if Ng else number_density * (R/GIGA_TO_BASE)**3
     
     prefactor = PLANCK_MASS_EV**2/(8*PI)
     if R < 1e5:
