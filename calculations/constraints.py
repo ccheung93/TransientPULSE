@@ -374,7 +374,7 @@ def group_velocity(m, E, rho, K, coupling):
         
     Args:
         m (float): mass of phi [eV]
-        E (array of floats): energies [eV]       # TODO: cannot be array?
+        E (array of floats): energies [eV]
         rho (array of floats): SM density [eV^4]
         K (float): energy density fraction [unitless]
         coupling (float): dilatonic coupling [unitless]
@@ -388,7 +388,8 @@ def group_velocity(m, E, rho, K, coupling):
     m_eff = np.sqrt(m**2 + beta)
     q = np.asarray(E) / m_eff
     
-    v_g = np.sqrt(1 - np.where(q**2 > 1, 1 / q**2, 0.0))
+    # if the fraction in Eq.20 is greater than 1, set v_g to 0
+    v_g = np.sqrt(1 - np.where(q**2 > 1, 1 / q**2, 1))
     
     return v_g
 
