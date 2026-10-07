@@ -30,7 +30,7 @@ The virtual environment isolates package versions to ensure reproducibility. The
 Transient PULSE provides two complementary workflows:
 
 - **Waveform propagation** -- numerically propagates a source emission spectrum through a density profile to build the frequency-time spectrogram of the signal at Earth. See `examples_propagation.ipynb` for a walkthrough with a time-independent and a time-dependent Gaussian source, or `examples_propagation.py` for the equivalent Python script.
-- **Constraint plotting** -- analytically derives detection-threshold, time-delay, and screening couplings from source and experiment parameters to produce projected sensitivity plots. See `examples_constraint_plots_manual.ipynb` for single-source and grid-plot examples, or `examples_constraint_plots.py` for the equivalent Python script.
+- **Constraint plotting** -- analytically derives detection-threshold, time-delay, and screening couplings from source and experiment parameters to produce projected sensitivity plots. See `examples_projected_sensitivity_plots_manual.ipynb` for single-source and grid-plot examples, or `examples_projected_sensitivity_plots.py` for the equivalent Python script.
 
 `examples_complete_workflow.ipynb` demonstrates the full pipeline end to end, from an input spectrum, through propagation, to a constraint plot.
 
