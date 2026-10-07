@@ -2,7 +2,7 @@
 
 Transient PULSE: Propagation of UltraLight (pseudo)Scalars to Earth
 
-Transient PULSE is a software package written in Python that characterizes how transient signals of ultralight bosonic (ULB) fields change during their propagation to Earth. The code allows users to input an emission energy spectrum and a density profile for the medium of Standard Model matter through which the ULB fields propagate. The emission spectrum can be given as a CSV file or an analytical expression. Then, the code propagates the momentum modes within the emission spectrum from the source to the Earth, with the final result giving a frequency versus time decomposition of the signal, known as a spectrogram.
+Transient PULSE is a software package written in Python that characterizes how transient signals of ultralight bosonic (ULB) fields change during their propagation to Earth. Transient PULSE numerically implements the source-to-detector framework introduced in Eby, Shirai, Stadnik & Takhistov, Phys. Lett. B 825 (2022) 136858, and incorporates the later in-medium multimessenger treatment of Arakawa, Zaheer, Takhistov, Safronova, Eby & Cheung, JCAP 02 (2026) 026. The code allows users to input an emission energy spectrum and a density profile for the medium of Standard Model matter through which the ULB fields propagate. The emission spectrum can be given as a CSV file or an analytical expression. Then, the code propagates the momentum modes within the emission spectrum from the source to the Earth, with the final result giving a frequency versus time decomposition of the signal, known as a spectrogram.
 
 Furthermore, there are a variety of parameters that users can adjust to explore different types of events and particle physics models. A user can also produce experimental reach plots, with simplified rescaling of bounds and projections of dark matter searches to transient signals of the type simulated in the code package.
 
@@ -43,8 +43,10 @@ Transient PULSE is released under the MIT License. See [LICENSE](LICENSE) for de
 If you use Transient PULSE in your research, please cite:
 
 J. Arakawa, C. Cheung, M. H. Zaheer, V. Takhistov, and M. S. Safronova, "Transient PULSE: Code for the Transient Propagation of UltraLight (pseudo)Scalars to Earth," submitted to Computer Physics Communications.
-
 (Full citation details, including DOI, will be added once the preprint/paper is published.)
+
+J. Eby, S. Shirai, Y. V. Stadnik, and V. Takhistov, Phys. Lett. B 825, 136858 (2022). 
+J. Arakawa, M. H. Zaheer, V. Takhistov, M. S. Safronova, J. Eby, and C. Cheung, JCAP 02, 026 (2026).
 
 ## Contributing
 
