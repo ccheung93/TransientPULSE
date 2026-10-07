@@ -383,14 +383,17 @@ def group_velocity(m, E, rho, K, coupling):
         vg (float): group velocity
     """
     rho = rho * K
-    
+
     beta = (8*PI/PLANCK_MASS_EV**2) * coupling * rho
+
+    
     m_eff = np.sqrt(m**2 + beta)
     q = np.asarray(E) / m_eff
-    
-    # if the fraction in Eq.20 is greater than 1, set v_g to 0
-    v_g = np.sqrt(1 - np.where(q**2 > 1, 1 / q**2, 1))
-    
+    m_eff2 = m**2 + beta
+    q2 = np.asarray(E)**2 / m_eff2
+    v_g = np.sqrt(1 - np.where((q**2 > 1) & (m_eff2 >= 0), 1/q**2, 1))
+    # print(v_g)
+
     return v_g
 
 def propagation_time(m, E, x, rho, K, coupling):
@@ -411,14 +414,17 @@ def propagation_time(m, E, x, rho, K, coupling):
         float: total propagation time [1/eV]
     """
     v_g = group_velocity(m, E, rho, K, coupling)
-    x = np.asarray(x)
-    v_g_inv = 1 / v_g
+    if any(v_g == 0):
+        return 0
+    else:
+        x = np.asarray(x)
+        v_g_inv = 1 / v_g
 
-    # Trapezoidal integration of 1/v_g over x
-    dx = np.diff(x)
-    vg_avg = 0.5 * (v_g_inv[:-1] + v_g_inv[1:])
+        # Trapezoidal integration of 1/v_g over x
+        dx = np.diff(x)
+        vg_avg = 0.5 * (v_g_inv[:-1] + v_g_inv[1:])
 
-    return np.sum(vg_avg * dx)
+        return np.sum(vg_avg * dx)
 
 def propagation_time_GW(R):
     """ Calculates propagation time for gravitational wave (GW)

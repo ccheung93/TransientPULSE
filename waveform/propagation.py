@@ -13,7 +13,7 @@ import matplotlib.colors as mcolors
 import mpl_toolkits as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from utils.constants import *
-from calculations.constraints import propagation_time, propagation_time_GW
+from calculations.sensitivities import propagation_time, propagation_time_GW, group_velocity
 from utils.logging_utils import get_logger
 
 logger = get_logger()
@@ -110,7 +110,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     E_avg = np.sqrt(m**2 + p_avg**2)
 
     # Time window for each momentum mode
-    t_start = t_arrivals[i1] + delta_t_s[0]     # Defined by fastest momentum mode in the momentum bin
+    t_start = t_arrivals[i0] + delta_t_s[0]     # Defined by fastest momentum mode in the momentum bin
     t_end = t_arrivals[i0] + delta_t_s[1]       # Defined by the slowest momentum mode in the bin
 
     # Per-pair bin widths using the valid pair indices
@@ -130,15 +130,20 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
             # Assign contribution to the nearest time bin so the spectrogram has no gaps.
             nearest = np.clip(np.searchsorted(t_duration, t_start[i]), 0, len(t_duration) - 1)
             spectrogram_array[i0_idx][nearest] += spec_value * (A_a*E_a/p_a)
-        phi = (A_a/R) * np.cos(E_a * time_window - p_a * R)
-        phi_t_final[time_mask] +=  phi
+
+
+        # If you have phase information, you can additionally construct the waveform using phi and phi_t_final below. 
+        # However, we do not assume phase information is known here.
+
+        # phi = (A_a/R) * np.cos(E_a * time_window - p_a * R + phase information)
+        # phi_t_final[time_mask] +=  phi
 
     end_time = time.time()
     logger.info(f'Propagation completed in {end_time - start_time:.2f}s')
 
-    # Optionally save waveform plot
-    if save_waveform:
-        plot_waveform(t_duration_Earth_s, phi_t_final, filename='waveform_plot.pdf')
+    # Optionally save waveform plot if utilized above.
+    # if save_waveform:
+    #     plot_waveform(t_duration_Earth_s, phi_t_final, filename='waveform_plot.pdf')
         
     return t_duration_Earth_s, phi_t_final, N_points_spectrogram, E, spectrogram_array, valid
 
@@ -175,7 +180,7 @@ def plot_waveform(t_duration, phi_signal, filename='plots/waveform_plot.pdf'):
     logger.info(f'Saved {filename} in {end_time - start_time:.2f}s')
 
 
-def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False, mass=None, burst_duration=None, distance=None,xscale = 'linear', yscale = 'linear'):
+def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=None, cutoff_max=None, filename='plots/spectrogram_plot.pdf', show=False, mass=None, burst_duration=None, distance=None, coupling = None, K=None ,xscale = 'linear', yscale = 'linear'):
     """
     Plot and save the frequency vs. time spectrogram.
 
@@ -209,15 +214,13 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
 
     plt.rcParams['mathtext.fontset'] = 'cm'
     plt.rcParams.update({'font.size': 40, 'font.family': 'STIXGeneral'})
-
-    fig, ax = plt.subplots(figsize = (30, 21))
+    fig, ax = plt.subplots(figsize = (30, 16))
     X, Y = np.meshgrid(t_duration, freq_plot)
     cmap_name = 'viridis'
     cmap = plt.colormaps[cmap_name]
     rgb = plt.colormaps[cmap_name](0)
     cmap.set_bad(rgb)
     masked_data = np.ma.masked_where(spectrogram_plot <= 0, spectrogram_plot)
-
     im = ax.pcolormesh(X, Y,
                         masked_data,
                         shading='nearest',
@@ -269,15 +272,19 @@ def plot_spectrogram(N_points, t_min, t_max, E, spectrogram_array, cutoff_min=No
     ax_y.set_xscale('log')
     ax_y.set_xlabel(r'$\rho(f)$')
 
-    if mass is not None or burst_duration is not None or distance is not None:
+    if mass is not None or burst_duration is not None or distance is not None or coupling is not None or K is not None:
         lines = []
         if mass is not None:
             log_m = np.log10(mass)
-            lines.append(rf'$m_\phi = 10^{{{log_m:.0f}}}\ {{\rm eV}}$')
+            lines.append(rf'$m_\phi \,= 10^{{{log_m:.0f}}}\ {{\rm eV}}$')
         if burst_duration is not None:
-            lines.append(rf'$\,t_* \, \hspace{{0.05}} = {burst_duration:.3g}\ {{\rm s}}$')
+            lines.append(rf'$\,t_* \, \hspace{{0.15}} = {burst_duration:.3g}\ {{\rm s}}$')
         if distance is not None:
-            lines.append(rf'$\, R ~ \,  = {distance:.3g}\ {{\rm kpc}}$')
+            lines.append(rf'$\, R ~~  = {distance:.3g}\ {{\rm kpc}}$')
+        if coupling is not None:
+                    lines.append(r'$d^{(2)}_i$' + rf'$ = {coupling:.3g}$')
+        if K is not None:
+                    lines.append(rf'$ ~ K_i \, = {K:.3g}$')
         ax_y.text(0.05, 1.05, '\n'.join(lines), transform=ax_y.transAxes, 
                   fontsize=35, ha='left', va='bottom', clip_on=False, 
                   bbox=dict(facecolor='white', alpha=0.0, edgecolor='none', boxstyle='round,pad=0.3'))
@@ -429,6 +436,7 @@ def create_source_from_propagation(avg_density, burst_duration, R, mass, arrival
         mass=mass,
         tstar=tstar_sec,
         R=R_pc,
+        total_duration=total_duration,
         ULB_type=ULB_type,
         coupling_type=coupling_type,
         coupling_order=coupling_order
@@ -488,10 +496,6 @@ def load_source_from_file(filename='source.params', ULB_type=''):
 
 
 def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=None):
-    """
-    
-    """
-    
     # Default cutoff values
     cutoff_min = cutoff_min if cutoff_min else 0
     cutoff_max = cutoff_max if cutoff_max else t_duration[-1]
@@ -508,9 +512,10 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     f_avg = np.sum(freq * rho_f_norm) * delta_f
     w_avg = 2*PI*f_avg/SEC_TO_INEV
     rho_t_avg = np.mean(rho_t[rho_t > 0])
+    rho_f_maxnorm = rho_f / (max(rho_f))
     std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm) * delta_f)
     print(f'frequency standard deviation = {std_f}')
     print(f'max density = {max(rho_t)}, {max(rho_f)}')
     print(f'avg density = {rho_t_avg}')
     
-    return w_avg, rho_t, rho_f_norm, rho_t_avg, f_avg, std_f
+    return w_avg, rho_t, rho_f_maxnorm, rho_t_avg, f_avg, std_f

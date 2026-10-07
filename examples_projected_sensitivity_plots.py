@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-from calculations.constraints import *
+from calculations.sensitivities import *
 from utils.constants import *
 from utils.expt_params import *
 from plotting.limits import *

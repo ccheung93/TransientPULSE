@@ -1,5 +1,5 @@
 import numpy as np
-from calculations.constraints import *
+from calculations.sensitivities import *
 from utils.constants import *
 from utils.expt_params import *
 from inputs.source import Source
@@ -169,16 +169,15 @@ class SignalModel:
         q = calc_k_over_m(source.mass, self.w)
         self.dw = calc_energy_spread(t_star, aw=self.aw)
         
-        dx_spread = calc_wave_spread(q, self.w, self.dw, R)
-        total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
+        total_duration = source.total_duration*SEC_TO_INEV 
         
-        self.rho = calc_rho(source.Etot, R, total_wave_spread)
+        self.rho = calc_rho(source.Etot, R, total_duration)
         
         tau_star = calc_tau_star(source.mass, q, self.dw, R, t_star)
         tau_DM = calc_tau_DM(self.w)
         
         self.trf = calc_timing_rescaling_factor(
-            total_wave_spread, tau_star, tau_DM, 
+            total_duration, tau_star, tau_DM, 
             t_int=experiment.integration_time, 
             t_int_DM=experiment.integration_time_DM
         )

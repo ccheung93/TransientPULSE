@@ -7,4 +7,4 @@ This module contains analytical formulas for computing:
 - Environmental screening couplings
 """
 
-from .constraints import *
+from .sensitivities import *

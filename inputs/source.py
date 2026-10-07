@@ -12,7 +12,7 @@ class Source:
     }
     VALID_COUPLING_ORDERS = {'linear', 'quad', None}
 
-    def __init__(self, Etot, mass, tstar, R, ULB_type, coupling_type, coupling_order=None):
+    def __init__(self, Etot, mass, tstar, R, total_duration, ULB_type, coupling_type, coupling_order=None):
         """Initialize the source parameters
 
         Args:
@@ -20,6 +20,7 @@ class Source:
             mass (float): Mass of phi field [eV]
             tstar (float): Intrinsic burst duration [s]
             R (float): Distance between source and detector [pc]
+            total_duration (float): duration of total signal [s]
             ULB_type (str): Type of ULB ('scalar' or 'ALP')
             coupling_type (str): Type of coupling (e.g. 'electron', 'photon')
             coupling_order (str or int, optional): Coupling order (for scalar only).
@@ -42,6 +43,7 @@ class Source:
         self.mass = validate_positive_float(mass, 'mass', 'eV')
         self.tstar = validate_positive_float(tstar, 'tstar', 'seconds')
         self.R = validate_positive_float(R, 'R', 'parsecs')
+        self.total_duration = validate_positive_float(total_duration, 'total_duration', 'seconds')
 
         # Validate and set categorical parameters
         self._validate_and_set_ULB_type(ULB_type)
