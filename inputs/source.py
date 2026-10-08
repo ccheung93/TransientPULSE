@@ -12,7 +12,7 @@ class Source:
     }
     VALID_COUPLING_ORDERS = {'linear', 'quad', None}
 
-    def __init__(self, Etot, mass, tstar, R, total_duration, ULB_type, coupling_type, coupling_order=None):
+    def __init__(self, Etot, mass, tstar, R, ULB_type, coupling_type, coupling_order=None,total_duration=None):
         """Initialize the source parameters
 
         Args:
@@ -43,7 +43,10 @@ class Source:
         self.mass = validate_positive_float(mass, 'mass', 'eV')
         self.tstar = validate_positive_float(tstar, 'tstar', 'seconds')
         self.R = validate_positive_float(R, 'R', 'parsecs')
-        self.total_duration = validate_positive_float(total_duration, 'total_duration', 'seconds')
+        if total_duration is not None:
+            self.total_duration = validate_positive_float(total_duration, 'total_duration', 'seconds')
+        else:
+            self.total_duration = total_duration
 
         # Validate and set categorical parameters
         self._validate_and_set_ULB_type(ULB_type)

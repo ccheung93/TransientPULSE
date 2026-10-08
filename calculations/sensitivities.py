@@ -2,7 +2,7 @@ import numpy as np
 from utils.constants import * 
 from utils.expt_params import *
 
-def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, rho=None): 
+def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, rho=None,total_duration=None): 
     """ Calculate the energy density of phi at the Earth and timing rescaling factor calculated for a spectrum
     
     Args:
@@ -34,7 +34,10 @@ def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_S
     
     # Compute signal duration
     dx_spread = calc_wave_spread(q, energies, dw, R)
-    total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
+    if total_duration is not None:
+        total_wave_spread = total_duration
+    else:
+        total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
     
     # Compute energy density of phi at Earth
     rho = rho if rho else calc_rho(Etot, R, total_wave_spread)
@@ -183,7 +186,7 @@ def calc_rho(Etot, R, dx):
     """ 
     return Etot/(4*PI*R**2*dx)
 
-def coupling_probe(Etot, t, R, w, m, eta, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, coupling_order=None, coupling_type=None, axion=False):
+def coupling_probe(Etot, t, R, w, m, eta, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC,total_duration=None, coupling_order=None, coupling_type=None, axion=False):
     """ Calculate value of coupling we can probe
 
     Args:
@@ -198,7 +201,7 @@ def coupling_probe(Etot, t, R, w, m, eta, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_
     Returns:
         float: value of coupling we can probe
     """
-    rho, timing_rescaling_factor = signal(Etot, m, w, t, R, aw=aw, t_int=t_int, t_int_DM=t_int_DM)
+    rho, timing_rescaling_factor = signal(Etot, m, w, t, R, aw=aw, t_int=t_int, t_int_DM=t_int_DM,total_duration=total_duration)
     
     if axion:
         g_DM = G_DM_BENCHMARKS[coupling_type] * DEFAULT_NORMALIZATION_MULTIPLIER[coupling_type]
@@ -415,7 +418,7 @@ def propagation_time(m, E, x, rho, K, coupling):
     """
     v_g = group_velocity(m, E, rho, K, coupling)
     if any(v_g == 0):
-        return 0
+        return np.inf
     else:
         x = np.asarray(x)
         v_g_inv = 1 / v_g

@@ -87,7 +87,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
         logger.debug(f"Using global time range: {t_fastest} to {t_slowest}")
     else:
         t_fastest = t_fastest_absolute
-        t_slowest = np.max(t_arrivals) + ts_eV
+        t_slowest = np.max(t_arrivals[valid]) + ts_eV
         logger.debug(f"Computed local time range: {t_fastest} to {t_slowest}")
 
     t_d = t_slowest - t_fastest

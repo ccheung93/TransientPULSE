@@ -169,7 +169,13 @@ class SignalModel:
         q = calc_k_over_m(source.mass, self.w)
         self.dw = calc_energy_spread(t_star, aw=self.aw)
         
-        total_duration = source.total_duration*SEC_TO_INEV 
+        total_duration = source.total_duration
+        if total_duration is not None:
+            total_duration = total_duration*SEC_TO_INEV
+        
+        else:
+            dx_spread = calc_wave_spread(q, self.w, self.dw, R)
+            total_duration = calc_total_wave_spread(t_star, dx_spread)
         
         self.rho = calc_rho(source.Etot, R, total_duration)
         
