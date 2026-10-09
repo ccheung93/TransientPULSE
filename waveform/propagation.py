@@ -71,7 +71,9 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     # Modes are screened if m_eff > E anywhere along the path.
     # The worst case is at maximum density, so check against that.
     beta_max = (8*PI/PLANCK_MASS_EV**2) * d * K * np.max(rho)
-    not_screened = E**2 > m**2 + beta_max
+    not_screened = (E**2 > m**2 + beta_max)
+    if m**2 + beta_max < 0:
+        raise ValueError(r"m^2 + beta < 0. Out of region of validity: Negative coupling too large.")   
     
     # Set valid region not screened
     valid = np.where(not_screened)[0]
@@ -104,6 +106,7 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
     # Define indices for all adjacent bin pairs
     i0 = valid[:-1]
     i1 = valid[1:]
+    t_bin_size = t_duration[1] - t_duration[0]
 
     p_avg = (p[i0] + p[i1]) / 2
     A_avg = (A[i0] + A[i1]) / 2
@@ -115,8 +118,10 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     # Per-pair bin widths using the valid pair indices
     delta_p_pairs = p[i1] - p[i0]
-    spec_value_arr = 1/(4*PI*R**2 * ts_eV) * delta_p_pairs
-
+    if ts_eV >= t_bin_size:
+        spec_value_arr = 1/(4*PI*R**2 * ts_eV) * delta_p_pairs
+    else:
+        spec_value_arr = 1/(4*PI*R**2 * t_bin_size) * delta_p_pairs
     spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
 
     for i, (i0_idx, p_a, A_a, E_a) in enumerate(zip(i0, p_avg, A_avg, E_avg)):
@@ -496,6 +501,25 @@ def load_source_from_file(filename='source.params', ULB_type=''):
 
 
 def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=None):
+    """Compute time and frequency profiles of the spectrogram energy density
+
+    Args:
+        t_duration (np.ndarray): Time array [s]
+        spectrogram (np.ndarray): 2D array (energy x time) of energy density [eV^4]
+        freq (np.ndarray): Frequency array [Hz]
+        cutoff_min (float, optional): Start of time range to use [s]. Defaults to 0.
+        cutoff_max (float, optional): End of time range to use [s]. Defaults to t_duration[-1].
+
+    Returns:
+        tuple: (w_avg, rho_t, rho_f, rho_t_avg, f_avg, std_f)
+            - w_avg: Mean angular frequency [eV]
+            - rho_t: Energy density vs. time [eV^4]
+            - rho_f: Energy density vs. frequency, normalized to its maximum
+            - rho_t_avg: Mean of rho_t over nonzero time bins [eV^4]
+            - f_avg: Mean frequency [Hz]
+            - std_f: Frequency standard deviation [Hz]
+    """
+
     # Default cutoff values
     cutoff_min = cutoff_min if cutoff_min else 0
     cutoff_max = cutoff_max if cutoff_max else t_duration[-1]
