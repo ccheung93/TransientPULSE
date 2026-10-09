@@ -2,7 +2,7 @@ import numpy as np
 from utils.constants import * 
 from utils.expt_params import *
 
-def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, rho=None,total_duration=None): 
+def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_SEC, t_int_DM=YEAR_TO_SEC, rho=None, total_duration=None): 
     """ Calculate the energy density of phi at the Earth and timing rescaling factor calculated for a spectrum
     
     Args:
@@ -17,6 +17,9 @@ def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_S
                     default = 1 for minimal uncertainty (corresponds to a Gaussian wavepacket)
         t_int (float): integration time [s], default = 1 day
         t_int_DM (float): integration time for dark matter experiment [s], default = 1 year
+        rho (float): energy density of phi at Earth [eV^4]; computed if None
+        total_duration (float): total signal duration at the detector [s]; if None, the analytic
+                                wave spread is used
 
     Returns:
         rho (float): energy density of phi at Earth [eV^4]
@@ -35,7 +38,7 @@ def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_S
     # Compute signal duration
     dx_spread = calc_wave_spread(q, energies, dw, R)
     if total_duration is not None:
-        total_wave_spread = total_duration
+        total_wave_spread = total_duration*SEC_TO_INEV
     else:
         total_wave_spread = calc_total_wave_spread(t_star, dx_spread)
     

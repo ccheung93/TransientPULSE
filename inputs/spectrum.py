@@ -104,7 +104,8 @@ class SignalModel:
             self.coupling_probe = coupling_probe(
                 source.Etot, source.tstar, source.R, self.w, source.mass,
                 experiment.sensitivity, aw=1, t_int=experiment.integration_time,
-                t_int_DM=experiment.integration_time_DM, coupling_type=source.coupling_type,
+                t_int_DM=experiment.integration_time_DM, total_duration=source.total_duration,
+                coupling_type=source.coupling_type,
                 coupling_order=source.coupling_order, axion=self.is_axion
             )
 

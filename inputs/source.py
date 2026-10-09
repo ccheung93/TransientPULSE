@@ -12,7 +12,7 @@ class Source:
     }
     VALID_COUPLING_ORDERS = {'linear', 'quad', None}
 
-    def __init__(self, Etot, mass, tstar, R, ULB_type, coupling_type, coupling_order=None,total_duration=None):
+    def __init__(self, Etot, mass, tstar, R, ULB_type, coupling_type, coupling_order=None, total_duration=None):
         """Initialize the source parameters
 
         Args:
@@ -20,11 +20,11 @@ class Source:
             mass (float): Mass of phi field [eV]
             tstar (float): Intrinsic burst duration [s]
             R (float): Distance between source and detector [pc]
-            total_duration (float): duration of total signal [s]
             ULB_type (str): Type of ULB ('scalar' or 'ALP')
             coupling_type (str): Type of coupling (e.g. 'electron', 'photon')
             coupling_order (str or int, optional): Coupling order (for scalar only).
                 Accepts: 'linear'/1 or 'quad'/2. Defaults to None.
+            total_duration (float): duration of total signal [s]
 
         Raises:
             TypeError: If arguments are not of expected types
