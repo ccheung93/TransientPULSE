@@ -49,7 +49,7 @@ def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_S
     tau_star = calc_tau_star(m_phi, q, dw, R, t_star)
     tau_DM = calc_tau_DM(energies)
     timing_rescaling_factor = calc_timing_rescaling_factor(total_wave_spread, tau_star, tau_DM, t_int=t_int, t_int_DM=t_int_DM)
-    
+    print(f'rho from sensitivities: signal() = {rho}')
     return rho, timing_rescaling_factor
 
 def calc_k_over_m(m_phi, w):
@@ -391,14 +391,10 @@ def group_velocity(m, E, rho, K, coupling):
     rho = rho * K
 
     beta = (8*PI/PLANCK_MASS_EV**2) * coupling * rho
-
     
-    m_eff = np.sqrt(m**2 + beta)
-    q = np.asarray(E) / m_eff
     m_eff2 = m**2 + beta
     q2 = np.asarray(E)**2 / m_eff2
-    v_g = np.sqrt(1 - np.where((q**2 > 1) & (m_eff2 >= 0), 1/q**2, 1))
-    # print(v_g)
+    v_g = np.sqrt(1 - np.where((q2 > 1) & (m_eff2 >= 0), 1/q2, 1))
 
     return v_g
 
