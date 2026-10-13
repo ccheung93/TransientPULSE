@@ -7,7 +7,7 @@ waveforms through a galactic density profile.
 
 import numpy as np
 from utils.data_utils import read_medium_data, interpolate_data
-from utils.constants import KPC_TO_INEV, GCM3_TO_EV4
+from utils.constants import KPC_TO_INEV, GCM3_TO_EV4, PI, PLANCK_MASS_EV
 from calculations.sensitivities import propagation_time_GW
 
 class WaveformCollection:
@@ -83,8 +83,19 @@ class WaveformCollection:
 
         # Get min and max arrival times
         R = x[-1] - x[0]
+
+        # Modes are screened if m_eff > E anywhere along the path.
+        # The worst case is at maximum density, so check against that.
+        beta_max = (8*PI/PLANCK_MASS_EV**2) * self.physics.coupling * self.physics.K * np.max(rho)
+        not_screened = (E**2 > m**2 + beta_max)
+        if m**2 + beta_max < 0:
+            raise ValueError(r"m^2 + beta < 0. Out of region of validity: Negative coupling too large.")   
+            
+        # Set valid region not screened
+        valid = np.where(not_screened)[0]
+
         t_min_prop = propagation_time_GW(R)
-        t_max_prop = np.max(t_arrivals)
+        t_max_prop = np.max(t_arrivals[valid])
 
         # Add emission time windows
         t_min_global = t_min_prop

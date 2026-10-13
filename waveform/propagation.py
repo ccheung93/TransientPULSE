@@ -118,12 +118,13 @@ def propagation(spec, density_profile, m, d, K, ts_sec, N_points_spectrogram=Non
 
     # Per-pair bin widths using the valid pair indices
     delta_p_pairs = p[i1] - p[i0]
-    if ts_eV >= t_bin_size:
+    if ts_eV/N_time_steps > t_bin_size:
         spec_value_arr = 1/(4*PI*R**2 * ts_eV) * delta_p_pairs
     else:
-        spec_value_arr = 1/(4*PI*R**2 * t_bin_size) * delta_p_pairs
+        spec_value_arr = 1/(4*PI*R**2 * t_bin_size) * delta_p_pairs / N_time_steps
+ 
     spectrogram_array = np.zeros((len(E), int(N_points_spectrogram)))
-
+    
     for i, (i0_idx, p_a, A_a, E_a) in enumerate(zip(i0, p_avg, A_avg, E_avg)):
         time_mask = np.where((t_duration>t_start[i]) & (t_duration<t_end[i]))
         time_window = t_duration[time_mask]

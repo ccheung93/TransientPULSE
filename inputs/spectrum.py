@@ -103,9 +103,8 @@ class SignalModel:
             self._compute_derived_quantities(source, experiment)
             self.coupling_probe = coupling_probe(
                 source.Etot, source.tstar, source.R, self.w, source.mass,
-                experiment.sensitivity, aw=1, t_int=experiment.integration_time,
-                t_int_DM=experiment.integration_time_DM, total_duration=source.total_duration,
-                coupling_type=source.coupling_type,
+                experiment.sensitivity, aw=self.aw, t_int=experiment.integration_time,
+                t_int_DM=experiment.integration_time_DM, coupling_type=source.coupling_type,
                 coupling_order=source.coupling_order, axion=self.is_axion
             )
 
@@ -135,7 +134,7 @@ class SignalModel:
         if aw_float < 1:
             raise ValueError(
                 f"aw must be >= 1 (uncertainty principle), got {aw_float}.\n"
-                f"aw represents the wavepacket uncertainty: dw * t_star = aw >= 1.\n"
+                f"aw represents the wavepacket uncertainty: 2 * dw * t_star = aw >= 1.\n"
                 f"Example: aw=1 (minimal uncertainty, Gaussian wavepacket)"
             )
 
