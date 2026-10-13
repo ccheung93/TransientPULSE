@@ -291,7 +291,7 @@ def q_from_time_delay(dt, R):
     """
     return 1 / np.sqrt(1 - 1 / (1 + dt / R)**2)
 
-def coupling_from_time_delay(dt, R, m, E, Dg, K, Ng=None, axion=False):
+def coupling_from_time_delay(dt, R, m, E, Dg, K, coupling_order, Ng=None, axion=False):
     """ Calculate coupling from a time delay 
         For scalars: calculates d_i^(2) from Eq.39 in arXiv:2502.08716v1
         For axions: coupling corresponds to a constant value since axions do not exhibit screening
@@ -314,7 +314,7 @@ def coupling_from_time_delay(dt, R, m, E, Dg, K, Ng=None, axion=False):
     
     q = q_from_time_delay(dt_c, R_meters)
     
-    if axion:
+    if axion or coupling_order == 'linear':
         # axions do not exhibit screening, so time delays correspond to a constant q value, regardless of the coupling
         Em = m * q  
         return np.array([0 if Ei < Em else 1e100 for Ei in E])

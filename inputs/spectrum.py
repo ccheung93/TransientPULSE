@@ -165,6 +165,7 @@ class SignalModel:
         """
         t_star = source.tstar * SEC_TO_INEV
         R = source.R * PC_TO_INEV
+        coupling_order = source.coupling_order
         
         q = calc_k_over_m(source.mass, self.w)
         self.dw = calc_energy_spread(t_star, aw=self.aw)
@@ -198,12 +199,12 @@ class SignalModel:
         K = experiment.K if experiment.K is not None else ENERGY_DENSITY_FRACTIONS['space'].get(source.coupling_type, 1.0)
         for label, dt in experiment.time_delays.items():
             self.coupling_time_delays[label] = coupling_from_time_delay(
-                dt, source.R, source.mass, self.w, experiment.Dg, K, axion=self.is_axion
+                dt, source.R, source.mass, self.w, experiment.Dg, K, coupling_order, axion=self.is_axion
             )
         if experiment.Dg_secondary is not None:
             for label, dt in experiment.time_delays.items():
                 self.coupling_time_delays_secondary[label] = coupling_from_time_delay(
-                    dt, source.R, source.mass, self.w, experiment.Dg_secondary, K, axion=self.is_axion
+                    dt, source.R, source.mass, self.w, experiment.Dg_secondary, K, coupling_order, axion=self.is_axion
                 )
         if not self.is_axion and source.coupling_order == 'quad':
             K_E = ENERGY_DENSITY_FRACTIONS['earth'].get(source.coupling_type, 1.0)
