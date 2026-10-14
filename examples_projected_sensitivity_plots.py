@@ -177,8 +177,8 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
             qday = q_from_time_delay(DAY_TO_SEC*SPEED_OF_LIGHT, R*PC_TO_METERS)
             
             if coupling_order == 'linear':
-                dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
-                dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
+                dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space, coupling_order)
+                dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space, coupling_order)
                 
                 setup_axes(axij, xlims=(.3e-20, 0.9e-6), ylims=(1e-9, 0.9))
                 linear_plot(axij, i, j, coupling, m, Elist, R, dday30, dyear30, qyear, qday, Microscope_m, FifthForce_m, E_unc, coupling_type, filename, dt_label_positions=dt_label_positions)
@@ -188,11 +188,11 @@ def plots(R, Etot, coupling_type, coupling_order, save_plots=True, show_plots=Fa
                 d_screen_atm = coupling_critical(Elist, R_ATM, RHO_ATM, m, K_atm)
                 d_screen_exp = coupling_critical(Elist, R_EXP, RHO_EXP, m, K_E)
                 
-                dday1 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 1e3, K_space)
-                dyear1 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 1e3, K_space)
-                
-                dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space)
-                dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space)
+                dday1 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 1e3, K_space, coupling_order)
+                dyear1 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 1e3, K_space, coupling_order)
+
+                dday30 = coupling_from_time_delay(DAY_TO_SEC, R, m, Elist, 30e3, K_space, coupling_order)
+                dyear30 = coupling_from_time_delay(YEAR_TO_SEC, R, m, Elist, 30e3, K_space, coupling_order)
                 
                 ylims = {
                     'photon': (.5e6, 8e32),
