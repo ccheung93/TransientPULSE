@@ -518,7 +518,7 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
             - w_avg: Mean angular frequency [eV]
             - rho_t: Energy density vs. time [eV^4]
             - rho_f: Energy density vs. frequency, normalized to its maximum
-            - rho_t_avg: Mean of rho_t over the full selected time window [eV^4]
+            - rho_t_avg: Mean of rho_t from the ULB signal's first arrival through the end of the selected window [eV^4]
             - f_avg: Mean frequency [Hz]
             - std_f: Frequency standard deviation [Hz]
     """
@@ -538,7 +538,11 @@ def calc_densities(t_duration, spectrogram, freq, cutoff_min=None, cutoff_max=No
     rho_f_norm = rho_f / (np.sum(rho_f) * delta_f)
     f_avg = np.sum(freq * rho_f_norm) * delta_f
     w_avg = 2*PI*f_avg/SEC_TO_INEV
-    rho_t_avg = np.mean(rho_t)
+    
+    # Average only from when ULB signal first arrives.
+    # Bins before that are empty because the signal has not reached Earth yet.
+    nonzero_idx = np.nonzero(rho_t)[0]
+    rho_t_avg = np.mean(rho_t[nonzero_idx[0]:]) if len(nonzero_idx) > 0 else 0.0
     rho_f_maxnorm = rho_f / (max(rho_f))
     std_f = np.sqrt(np.sum((freq-f_avg)**2 *rho_f_norm) * delta_f)
     print(f'frequency standard deviation = {std_f}')
