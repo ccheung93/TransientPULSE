@@ -49,7 +49,7 @@ def signal(Etot, m_phi, energies, burst_duration, distance, aw=1, t_int=DAY_TO_S
     tau_star = calc_tau_star(m_phi, q, dw, R, t_star)
     tau_DM = calc_tau_DM(energies)
     timing_rescaling_factor = calc_timing_rescaling_factor(total_wave_spread, tau_star, tau_DM, t_int=t_int, t_int_DM=t_int_DM)
-    print(f'rho from sensitivities: signal() = {rho}')
+    
     return rho, timing_rescaling_factor
 
 def calc_k_over_m(m_phi, w):
