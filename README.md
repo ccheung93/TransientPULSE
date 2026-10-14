@@ -46,6 +46,7 @@ J. Arakawa, C. Cheung, M. H. Zaheer, V. Takhistov, and M. S. Safronova, "Transie
 (Full citation details, including DOI, will be added once the preprint/paper is published.)
 
 J. Eby, S. Shirai, Y. V. Stadnik, and V. Takhistov, Phys. Lett. B 825, 136858 (2022). 
+
 J. Arakawa, M. H. Zaheer, V. Takhistov, M. S. Safronova, J. Eby, and C. Cheung, JCAP 02, 026 (2026).
 
 ## Contributing
