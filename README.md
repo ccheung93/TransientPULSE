@@ -42,8 +42,7 @@ Transient PULSE is released under the MIT License. See [LICENSE](LICENSE) for de
 
 If you use Transient PULSE in your research, please cite:
 
-J. Arakawa, C. Cheung, M. H. Zaheer, V. Takhistov, and M. S. Safronova, "Transient PULSE: Code for the Transient Propagation of UltraLight (pseudo)Scalars to Earth," submitted to Computer Physics Communications.
-(Full citation details, including DOI, will be added once the preprint/paper is published.)
+J. Arakawa, C. Cheung, M. H. Zaheer, V. Takhistov, and M. S. Safronova, arXiv:2610.20601, submitted to Computer Physics Communications.
 
 J. Eby, S. Shirai, Y. V. Stadnik, and V. Takhistov, Phys. Lett. B 825, 136858 (2022). 
 
